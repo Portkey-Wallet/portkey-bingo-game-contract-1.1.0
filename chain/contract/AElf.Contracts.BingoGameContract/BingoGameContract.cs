@@ -20,26 +20,26 @@ namespace AElf.Contracts.BingoGameContract
                 RegisterTime = Context.CurrentBlockTime
             };
             State.PlayerInformation[Context.Sender] = information;
-            State.TokenContract.Issue.Send(new IssueInput
-            {
-                Symbol = BingoGameContractConstants.CardSymbol,
-                Amount = BingoGameContractConstants.InitialCards,
-                To = Context.Sender,
-                Memo = "Initial Bingo Cards for player."
-            });
-            State.TokenContract.Issue.Send(new IssueInput
-            {
-                Symbol = BingoGameContractConstants.CardSymbol,
-                Amount = BingoGameContractConstants.InitialCards,
-                To = Context.Self
-            });
-            State.TokenContract.Transfer.Send(new TransferInput
-            {
-                Symbol = Context.Variables.NativeSymbol,
-                Amount = 100_00000000,
-                To = Context.Sender,
-                Memo = "Pay tx fee."
-            });
+            // State.TokenContract.Issue.Send(new IssueInput
+            // {
+            //     Symbol = BingoGameContractConstants.CardSymbol,
+            //     Amount = BingoGameContractConstants.InitialCards,
+            //     To = Context.Sender,
+            //     Memo = "Initial Bingo Cards for player."
+            // });
+            // State.TokenContract.Issue.Send(new IssueInput
+            // {
+            //     Symbol = BingoGameContractConstants.CardSymbol,
+            //     Amount = BingoGameContractConstants.InitialCards,
+            //     To = Context.Self
+            // });
+            // State.TokenContract.Transfer.Send(new TransferInput
+            // {
+            //     Symbol = Context.Variables.NativeSymbol,
+            //     Amount = 100_00000000,
+            //     To = Context.Sender,
+            //     Memo = "Pay tx fee."
+            // });
             return new Empty();
         }
 
@@ -84,7 +84,7 @@ namespace AElf.Contracts.BingoGameContract
             {
                 PlayBlockHeight = Context.CurrentHeight,
                 Amount = input.Value,
-                PlayId = Context.TransactionId
+                PlayId = Context.OriginTransactionId
             });
 
             State.PlayerInformation[Context.Sender] = playerInformation;
