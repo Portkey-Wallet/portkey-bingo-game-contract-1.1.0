@@ -98,21 +98,15 @@ namespace AElf.Contracts.BingoGameContract
             Context.LogDebug(() => $"Getting game result of play id: {input.ToHex()}");
 
             var playerInformation = State.PlayerInformation[Context.Sender];
-            if (playerInformation == null)
-            {
-                throw new AssertionException($"User {Context.Sender} not registered before.");
-            }
-
-            Assert(playerInformation.Bouts.Count > 0, $"User {Context.Sender} seems never join this game.");
+            
+            Assert(playerInformation != null, $"User {Context.Sender} not registered before.");
+            Assert(playerInformation!.Bouts.Count > 0, $"User {Context.Sender} seems never join this game.");
 
             var boutInformation = input == Hash.Empty
                 ? playerInformation.Bouts.First(i => i.BingoBlockHeight == 0)
                 : playerInformation.Bouts.FirstOrDefault(i => i.PlayId == input);
 
-            if (boutInformation == null)
-            {
-                throw new AssertionException("Bout not found.");
-            }
+            Assert(boutInformation != null, "Bout not found.");
 
             Assert(!boutInformation.IsComplete, "Bout already finished.");
             var targetHeight = boutInformation.PlayBlockHeight.Add(GetLagHeight());
@@ -126,12 +120,10 @@ namespace AElf.Contracts.BingoGameContract
 
             var randomHash = State.ConsensusContract.GetRandomHash.Call(new Int64Value
             {
-                Value = 3
+                Value = targetHeight
             });
-            if (randomHash == null)
-            {
-                throw new AssertionException("Still preparing your game result, please wait for a while :)");
-            }
+            
+            Assert(randomHash != null && !randomHash.Value.IsNullOrEmpty(), "Still preparing your game result, please wait for a while :)");
 
             var usefulHash = HashHelper.ConcatAndCompute(randomHash, playerInformation.Seed);
             var bitArraySum = SumHash(usefulHash);
