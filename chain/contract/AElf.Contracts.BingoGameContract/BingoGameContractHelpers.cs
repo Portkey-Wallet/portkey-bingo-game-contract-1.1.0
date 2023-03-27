@@ -94,5 +94,21 @@ namespace AElf.Contracts.BingoGameContract
         {
             return bitArraySum % 2 == 0;
         }
+
+        private bool GetBitArraySumResult(int bitArraySum)
+        {
+            Assert(bitArraySum is >= 0 and <= 256, $"random number: {bitArraySum} error");
+            if (bitArraySum < 129)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool GetResult(bool bitArraySumResult, bool type)
+        {
+            return bitArraySumResult == type;
+        }
     }
 }

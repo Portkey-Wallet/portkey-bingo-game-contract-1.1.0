@@ -1,5 +1,7 @@
 using AElf.Boilerplate.TestBase;
+using AElf.Contracts.MultiToken;
 using AElf.Cryptography.ECDSA;
+using AElf.Types;
 
 namespace AElf.Contracts.BingoGameContract
 {
@@ -8,9 +10,25 @@ namespace AElf.Contracts.BingoGameContract
         // You can get address of any contract via GetAddress method, for example:
         // internal Address DAppContractAddress => GetAddress(DAppSmartContractAddressNameProvider.StringName);
 
+        internal BingoGameContractContainer.BingoGameContractStub BingoGameContractStub { get; set; }
+        internal TokenContractContainer.TokenContractStub TokenContractStub { get; set; }
+        protected ECKeyPair DefaultKeyPair => Accounts[0].KeyPair;
+        protected Address DefaultAddress => Accounts[0].Address;
+
+        public BingoGameContractTestBase()
+        {
+            BingoGameContractStub = GetBingoGameContractStub(DefaultKeyPair);
+            TokenContractStub = GetTokenContractTester(DefaultKeyPair);
+        }
+
         internal BingoGameContractContainer.BingoGameContractStub GetBingoGameContractStub(ECKeyPair senderKeyPair)
         {
             return GetTester<BingoGameContractContainer.BingoGameContractStub>(DAppContractAddress, senderKeyPair);
+        }
+
+        internal TokenContractContainer.TokenContractStub GetTokenContractTester(ECKeyPair keyPair)
+        {
+            return GetTester<TokenContractContainer.TokenContractStub>(TokenContractAddress, keyPair);
         }
     }
 }

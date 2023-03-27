@@ -10,17 +10,17 @@ option csharp_namespace = "AElf.Contracts.BingoGameContract";
 
 service BingoGameContract {
     option (aelf.csharp_state) = "AElf.Contracts.BingoGameContract.BingoGameContractState";
-    
+
     // Actions
     rpc Register (google.protobuf.Empty) returns (google.protobuf.Empty) {
     }
-    rpc Play (google.protobuf.Int64Value) returns (google.protobuf.Int64Value) {
+    rpc Play (PlayInput) returns (google.protobuf.Int64Value) {
     }
     rpc Bingo (aelf.Hash) returns (google.protobuf.BoolValue) {
     }
     rpc Quit (google.protobuf.Empty) returns (google.protobuf.Empty) {
     }
-    
+
     // Views
     rpc GetAward (aelf.Hash) returns (google.protobuf.Int64Value) {
         option (aelf.is_view) = true;
@@ -28,6 +28,12 @@ service BingoGameContract {
     rpc GetPlayerInformation (aelf.Address) returns (PlayerInformation) {
         option (aelf.is_view) = true;
     }
+}
+
+message PlayInput {
+    int64 amount = 1;
+    // true = large, false = small
+    bool type = 2;
 }
 
 message PlayerInformation {
@@ -43,4 +49,5 @@ message BoutInformation {
     bool is_complete = 4;
     aelf.Hash play_id = 5;
     int64 bingo_block_height = 6;
+    bool type = 7;
 }

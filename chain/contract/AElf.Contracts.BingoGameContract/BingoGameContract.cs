@@ -58,12 +58,12 @@ namespace AElf.Contracts.BingoGameContract
             State.Initialized.Value = true;
         }
 
-        public override Int64Value Play(Int64Value input)
+        public override Int64Value Play(PlayInput input)
         {
-            Assert(input.Value > 1, "Invalid bet amount.");
+            Assert(input.Amount > 1 && input.Amount < BingoGameContractConstants.MaxAmount, "Invalid bet amount.");
             var playerInformation = GetPlayerInformation();
-
-            Context.LogDebug(() => $"Playing with amount {input.Value}");
+            
+            Context.LogDebug(() => $"Playing with amount {input.Amount}");
 
             if (State.TokenContract.Value == null)
             {
@@ -75,7 +75,7 @@ namespace AElf.Contracts.BingoGameContract
             {
                 From = Context.Sender,
                 To = Context.Self,
-                Amount = input.Value,
+                Amount = input.Amount,
                 Symbol = BingoGameContractConstants.CardSymbol,
                 Memo = "Enjoy!"
             });
@@ -83,7 +83,8 @@ namespace AElf.Contracts.BingoGameContract
             playerInformation.Bouts.Add(new BoutInformation
             {
                 PlayBlockHeight = Context.CurrentHeight,
-                Amount = input.Value,
+                Amount = input.Amount,
+                Type = input.Type,
                 PlayId = Context.OriginTransactionId
             });
 
@@ -125,7 +126,7 @@ namespace AElf.Contracts.BingoGameContract
 
             var randomHash = State.ConsensusContract.GetRandomHash.Call(new Int64Value
             {
-                Value = targetHeight
+                Value = 3
             });
             if (randomHash == null)
             {
@@ -134,9 +135,9 @@ namespace AElf.Contracts.BingoGameContract
 
             var usefulHash = HashHelper.ConcatAndCompute(randomHash, playerInformation.Seed);
             var bitArraySum = SumHash(usefulHash);
-            var isWin = ConvertHashToBool(bitArraySum);
-            var award = CalculateAward(boutInformation.Amount, GetKind(bitArraySum));
-            award = isWin ? award : -award;
+            var bitArraySumResult  = GetBitArraySumResult(bitArraySum);
+            var isWin = GetResult(bitArraySumResult, boutInformation.Type);
+            var award = isWin ? boutInformation.Amount : -boutInformation.Amount;
             var transferAmount = boutInformation.Amount.Add(award);
             if (transferAmount > 0)
             {
