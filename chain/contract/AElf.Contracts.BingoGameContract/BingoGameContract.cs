@@ -58,15 +58,16 @@ namespace AElf.Contracts.BingoGameContract
             State.Admin.Value = Context.Sender;
             State.MinimumBet.Value = BingoGameContractConstants.DefaultMinimumBet;
             State.MaximumBet.Value = BingoGameContractConstants.DefaultMaximumBet;
-            
+
             State.Initialized.Value = true;
         }
 
         public override Int64Value Play(PlayInput input)
         {
-            Assert(input.Amount >= State.MinimumBet.Value && input.Amount <= State.MaximumBet.Value, "Invalid bet amount.");
+            Assert(input.Amount >= State.MinimumBet.Value && input.Amount <= State.MaximumBet.Value,
+                "Invalid bet amount.");
             var playerInformation = GetPlayerInformation();
-            
+
             Context.LogDebug(() => $"Playing with amount {input.Amount}");
 
             if (State.TokenContract.Value == null)
@@ -94,7 +95,7 @@ namespace AElf.Contracts.BingoGameContract
 
             State.PlayerInformation[Context.Sender] = playerInformation;
 
-            return new Int64Value {Value = Context.CurrentHeight.Add(GetLagHeight())};
+            return new Int64Value { Value = Context.CurrentHeight.Add(GetLagHeight()) };
         }
 
         public override BoolValue Bingo(Hash input)
@@ -102,7 +103,7 @@ namespace AElf.Contracts.BingoGameContract
             Context.LogDebug(() => $"Getting game result of play id: {input.ToHex()}");
 
             var playerInformation = State.PlayerInformation[Context.Sender];
-            
+
             Assert(playerInformation != null, $"User {Context.Sender} not registered before.");
             Assert(playerInformation!.Bouts.Count > 0, $"User {Context.Sender} seems never join this game.");
 
@@ -126,12 +127,13 @@ namespace AElf.Contracts.BingoGameContract
             {
                 Value = targetHeight
             });
-            
-            Assert(randomHash != null && !randomHash.Value.IsNullOrEmpty(), "Still preparing your game result, please wait for a while :)");
+
+            Assert(randomHash != null && !randomHash.Value.IsNullOrEmpty(),
+                "Still preparing your game result, please wait for a while :)");
 
             var usefulHash = HashHelper.ConcatAndCompute(randomHash, playerInformation.Seed);
             var bitArraySum = SumHash(usefulHash);
-            var bitArraySumResult  = GetBitArraySumResult(bitArraySum);
+            var bitArraySumResult = GetBitArraySumResult(bitArraySum);
             var isWin = GetResult(bitArraySumResult, boutInformation.Type);
             var award = isWin ? boutInformation.Amount : -boutInformation.Amount;
             var transferAmount = boutInformation.Amount.Add(award);
@@ -149,15 +151,15 @@ namespace AElf.Contracts.BingoGameContract
             boutInformation.Award = award;
             boutInformation.IsComplete = true;
             State.PlayerInformation[Context.Sender] = playerInformation;
-            return new BoolValue {Value = isWin};
+            return new BoolValue { Value = isWin };
         }
 
         public override Int64Value GetAward(Hash input)
         {
             var boutInformation = GetPlayerInformation().Bouts.FirstOrDefault(i => i.PlayId == input);
             return boutInformation == null
-                ? new Int64Value {Value = 0}
-                : new Int64Value {Value = boutInformation.Award};
+                ? new Int64Value { Value = 0 }
+                : new Int64Value { Value = boutInformation.Award };
         }
 
         public override Empty Quit(Empty input)

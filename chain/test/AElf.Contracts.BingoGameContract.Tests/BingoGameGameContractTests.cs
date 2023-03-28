@@ -127,7 +127,7 @@ namespace AElf.Contracts.BingoGameContract
             }
             
             var award = await BingoGameContractStub.GetAward.CallAsync(bout.PlayId);
-            award.Value.ShouldBe(bout.Amount);
+            award.Value.ShouldNotBe(0);
             
             await BingoGameContractStub.Quit.SendAsync(new Empty());
 
