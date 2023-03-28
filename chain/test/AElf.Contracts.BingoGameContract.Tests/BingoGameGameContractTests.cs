@@ -35,7 +35,7 @@ namespace AElf.Contracts.BingoGameContract
             await RegisterTests();
             await InitializeAsync();
 
-            var amount = 200;
+            var amount = 1_00000000;
 
             var height = await BingoGameContractStub.Play.SendAsync(new PlayInput
             {
@@ -126,6 +126,9 @@ namespace AElf.Contracts.BingoGameContract
                 balance2.Balance.ShouldBe(balance.Balance);
             }
             
+            var award = await BingoGameContractStub.GetAward.CallAsync(bout.PlayId);
+            award.Value.ShouldBe(bout.Amount);
+            
             await BingoGameContractStub.Quit.SendAsync(new Empty());
 
             return isWin.Output.Value;
@@ -153,6 +156,36 @@ namespace AElf.Contracts.BingoGameContract
             result.TransactionResult.Error.ShouldContain("Invalid target height.");
         }
 
+        [Fact]
+        public async Task SetLimitSettingsTests()
+        {
+            await RegisterTests();
+            var settings = await BingoGameContractStub.GetLimitSettings.CallAsync(new Empty());
+            settings.MaxAmount.ShouldBe(100_00000000);
+            settings.MinAmount.ShouldBe(1_00000000);
+
+            await BingoGameContractStub.SetLimitSettings.SendAsync(new LimitSettings
+            {
+                MinAmount = 5_00000000,
+                MaxAmount = 15_00000000
+            });
+            
+            settings = await BingoGameContractStub.GetLimitSettings.CallAsync(new Empty());
+            settings.MaxAmount.ShouldBe(15_00000000);
+            settings.MinAmount.ShouldBe(5_00000000);
+        }
+        
+        [Fact]
+        public async Task SetLimitSettingsTests_Fail_InvalidInput()
+        {
+            await RegisterTests();
+            var result = await BingoGameContractStub.SetLimitSettings.SendWithExceptionAsync(new LimitSettings
+            {
+                MinAmount = -1
+            });
+            result.TransactionResult.Error.ShouldContain("Invalid input");
+        }
+
         private async Task InitializeAsync()
         {
             await TokenContractStub.Transfer.SendAsync(new TransferInput
@@ -165,7 +198,7 @@ namespace AElf.Contracts.BingoGameContract
             {
                 Spender = DAppContractAddress,
                 Symbol = "ELF",
-                Amount = 1000
+                Amount = 1000_00000000
             });
         }
 

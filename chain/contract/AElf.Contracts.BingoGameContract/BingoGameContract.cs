@@ -3,6 +3,7 @@ using System.Linq;
 using AElf.Contracts.MultiToken;
 using AElf.CSharp.Core;
 using AElf.Sdk.CSharp;
+using AElf.Sdk.CSharp.State;
 using AElf.Types;
 
 namespace AElf.Contracts.BingoGameContract
@@ -54,13 +55,16 @@ namespace AElf.Contracts.BingoGameContract
                 Context.GetContractAddressByName(SmartContractConstants.TokenContractSystemName);
             State.ConsensusContract.Value =
                 Context.GetContractAddressByName(SmartContractConstants.ConsensusContractSystemName);
-
+            State.Admin.Value = Context.Sender;
+            State.MinimumBet.Value = BingoGameContractConstants.DefaultMinimumBet;
+            State.MaximumBet.Value = BingoGameContractConstants.DefaultMaximumBet;
+            
             State.Initialized.Value = true;
         }
 
         public override Int64Value Play(PlayInput input)
         {
-            Assert(input.Amount > 1 && input.Amount < BingoGameContractConstants.MaxAmount, "Invalid bet amount.");
+            Assert(input.Amount >= State.MinimumBet.Value && input.Amount <= State.MaximumBet.Value, "Invalid bet amount.");
             var playerInformation = GetPlayerInformation();
             
             Context.LogDebug(() => $"Playing with amount {input.Amount}");
@@ -165,6 +169,26 @@ namespace AElf.Contracts.BingoGameContract
         public override PlayerInformation GetPlayerInformation(Address input)
         {
             return State.PlayerInformation[input];
+        }
+
+        public override Empty SetLimitSettings(LimitSettings input)
+        {
+            Assert(State.Admin.Value == Context.Sender, "No permission");
+            Assert(input.MinAmount >= 0 && input.MaxAmount >= 0, "Invalid input");
+
+            State.MinimumBet.Value = input.MinAmount;
+            State.MaximumBet.Value = input.MaxAmount;
+
+            return new Empty();
+        }
+
+        public override LimitSettings GetLimitSettings(Empty input)
+        {
+            return new LimitSettings
+            {
+                MaxAmount = State.MaximumBet.Value,
+                MinAmount = State.MinimumBet.Value
+            };
         }
     }
 }

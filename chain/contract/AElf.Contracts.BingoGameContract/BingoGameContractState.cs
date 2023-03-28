@@ -10,5 +10,9 @@ namespace AElf.Contracts.BingoGameContract
         public SingletonState<long> LagHeight { get; set; }
 
         public BoolState Initialized { get; set; }
+        public SingletonState<Address> Admin { get; set; }
+        
+        public SingletonState<long> MinimumBet { get; set; }
+        public SingletonState<long> MaximumBet { get; set; }
     }
 }

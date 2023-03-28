@@ -20,12 +20,17 @@ service BingoGameContract {
     }
     rpc Quit (google.protobuf.Empty) returns (google.protobuf.Empty) {
     }
+    rpc SetLimitSettings (LimitSettings) returns (google.protobuf.Empty) {
+    }
 
     // Views
     rpc GetAward (aelf.Hash) returns (google.protobuf.Int64Value) {
         option (aelf.is_view) = true;
     }
     rpc GetPlayerInformation (aelf.Address) returns (PlayerInformation) {
+        option (aelf.is_view) = true;
+    }
+    rpc GetLimitSettings (google.protobuf.Empty) returns (LimitSettings) {
         option (aelf.is_view) = true;
     }
 }
@@ -50,4 +55,9 @@ message BoutInformation {
     aelf.Hash play_id = 5;
     int64 bingo_block_height = 6;
     bool type = 7;
+}
+
+message LimitSettings {
+    int64 min_amount = 1;
+    int64 max_amount = 2;
 }
