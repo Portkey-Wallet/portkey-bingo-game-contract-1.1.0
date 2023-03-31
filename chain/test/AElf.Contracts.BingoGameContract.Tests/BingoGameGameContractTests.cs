@@ -91,7 +91,7 @@ namespace AElf.Contracts.BingoGameContract
 
         private async Task<bool> BingoTest()
         {
-            await PlayTests();
+            var id = await PlayTests();
             var balance = await TokenContractStub.GetBalance.CallAsync(new GetBalanceInput
             {
                 Owner = DefaultAddress,
@@ -119,11 +119,17 @@ namespace AElf.Contracts.BingoGameContract
             {
                 bout.Award.ShouldBe(bout.Amount);
                 balance2.Balance.ShouldBe(balance.Balance + bout.Award + bout.Amount);
+
+                var num = await BingoGameContractStub.GetRandomNumber.CallAsync(id);
+                num.Value.ShouldBeGreaterThan(128);
             }
             else
             {
                 bout.Award.ShouldBe(-bout.Amount);
                 balance2.Balance.ShouldBe(balance.Balance);
+                
+                var num = await BingoGameContractStub.GetRandomNumber.CallAsync(id);
+                num.Value.ShouldBeLessThan(129);
             }
             
             var award = await BingoGameContractStub.GetAward.CallAsync(bout.PlayId);

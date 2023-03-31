@@ -150,6 +150,8 @@ namespace AElf.Contracts.BingoGameContract
 
             boutInformation.Award = award;
             boutInformation.IsComplete = true;
+            boutInformation.RandomNumber = bitArraySum;
+            
             State.PlayerInformation[Context.Sender] = playerInformation;
             return new BoolValue { Value = isWin };
         }
@@ -191,6 +193,19 @@ namespace AElf.Contracts.BingoGameContract
                 MaxAmount = State.MaximumBet.Value,
                 MinAmount = State.MinimumBet.Value
             };
+        }
+
+        public override Int32Value GetRandomNumber(Hash input)
+        {
+            var playerInformation = GetPlayerInformation();
+            
+            Assert(input != null && !input.Value.IsNullOrEmpty(), "Invalid input");
+            
+            var boutInformation = playerInformation.Bouts.FirstOrDefault(i => i.PlayId == input);
+            
+            Assert(boutInformation != null, "Bout not found.");
+
+            return new Int32Value{Value = boutInformation.RandomNumber};
         }
     }
 }

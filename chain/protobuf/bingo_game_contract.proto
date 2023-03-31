@@ -33,6 +33,10 @@ service BingoGameContract {
     rpc GetLimitSettings (google.protobuf.Empty) returns (LimitSettings) {
         option (aelf.is_view) = true;
     }
+    
+    rpc GetRandomNumber (aelf.Hash) returns (google.protobuf.Int32Value) {
+        option (aelf.is_view) = true;
+    }
 }
 
 message PlayInput {
@@ -55,6 +59,7 @@ message BoutInformation {
     aelf.Hash play_id = 5;
     int64 bingo_block_height = 6;
     bool type = 7;
+    int32 random_number = 8;
 }
 
 message LimitSettings {
