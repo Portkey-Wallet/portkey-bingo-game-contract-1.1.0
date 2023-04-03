@@ -5,11 +5,13 @@ import "aelf/options.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/wrappers.proto";
 import "google/protobuf/timestamp.proto";
+import "acs12.proto";
 
 option csharp_namespace = "AElf.Contracts.BingoGameContract";
 
 service BingoGameContract {
     option (aelf.csharp_state) = "AElf.Contracts.BingoGameContract.BingoGameContractState";
+    option (aelf.base) = "acs12.proto";
 
     // Actions
     rpc Register (google.protobuf.Empty) returns (google.protobuf.Empty) {
