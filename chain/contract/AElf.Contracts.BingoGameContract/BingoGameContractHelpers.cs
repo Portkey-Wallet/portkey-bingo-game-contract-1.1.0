@@ -33,7 +33,7 @@ namespace AElf.Contracts.BingoGameContract
             }
 
             var minersCount = State.ConsensusContract.GetCurrentMinerList.Call(new Empty()).Pubkeys.Count;
-            State.LagHeight.Value = minersCount.Mul(8);
+            State.LagHeight.Value = minersCount.Mul(1);
 
             return State.LagHeight.Value;
         }
