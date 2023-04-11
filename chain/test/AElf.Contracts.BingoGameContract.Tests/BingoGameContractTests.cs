@@ -1,7 +1,5 @@
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AElf.Contracts.Consensus.AEDPoS;
 using AElf.Contracts.MultiToken;
 using AElf.Types;
 using Google.Protobuf.WellKnownTypes;
@@ -10,7 +8,7 @@ using Xunit;
 
 namespace AElf.Contracts.BingoGameContract
 {
-    public class BingoGameGameContractTests : BingoGameContractTestBase
+    public class BingoGameContractTests : BingoGameContractTestBase
     {
         [Fact]
         public async Task RegisterTests()
@@ -45,7 +43,7 @@ namespace AElf.Contracts.BingoGameContract
             var information = await BingoGameContractStub.GetPlayerInformation.CallAsync(DefaultAddress);
             information.Bouts.First().Amount.ShouldBe(amount);
             information.Bouts.First().Type.ShouldBe(true);
-            information.Bouts.First().PlayBlockHeight.ShouldBe(height.Output.Value - 8);
+            information.Bouts.First().PlayBlockHeight.ShouldBe(height.Output.Value - 1);
 
             return information.Bouts.First().PlayId;
         }
@@ -100,10 +98,6 @@ namespace AElf.Contracts.BingoGameContract
 
             var information = await BingoGameContractStub.GetPlayerInformation.CallAsync(DefaultAddress);
             var bout = information.Bouts.First();
-            for (var i = 0; i < 7; i++)
-            {
-                await BingoGameContractStub.Bingo.SendWithExceptionAsync(bout.PlayId);
-            }
 
             var isWin = await BingoGameContractStub.Bingo.SendAsync(bout.PlayId);
             var balance2 = await TokenContractStub.GetBalance.CallAsync(new GetBalanceInput
@@ -121,20 +115,20 @@ namespace AElf.Contracts.BingoGameContract
                 balance2.Balance.ShouldBe(balance.Balance + bout.Award + bout.Amount);
 
                 var num = await BingoGameContractStub.GetRandomNumber.CallAsync(id);
-                num.Value.ShouldBeGreaterThan(128);
+                num.Value.ShouldBeGreaterThan(127);
             }
             else
             {
                 bout.Award.ShouldBe(-bout.Amount);
                 balance2.Balance.ShouldBe(balance.Balance);
-                
+
                 var num = await BingoGameContractStub.GetRandomNumber.CallAsync(id);
-                num.Value.ShouldBeLessThan(129);
+                num.Value.ShouldBeLessThan(128);
             }
-            
+
             var award = await BingoGameContractStub.GetAward.CallAsync(bout.PlayId);
             award.Value.ShouldNotBe(0);
-            
+
             await BingoGameContractStub.Quit.SendAsync(new Empty());
 
             return isWin.Output.Value;
@@ -157,9 +151,6 @@ namespace AElf.Contracts.BingoGameContract
             var hash = await PlayTests();
             var result = await BingoGameContractStub.Bingo.SendWithExceptionAsync(HashHelper.ComputeFrom("test"));
             result.TransactionResult.Error.ShouldContain("Bout not found.");
-            
-            result = await BingoGameContractStub.Bingo.SendWithExceptionAsync(hash);
-            result.TransactionResult.Error.ShouldContain("Invalid target height.");
         }
 
         [Fact]
@@ -175,12 +166,12 @@ namespace AElf.Contracts.BingoGameContract
                 MinAmount = 5_00000000,
                 MaxAmount = 15_00000000
             });
-            
+
             settings = await BingoGameContractStub.GetLimitSettings.CallAsync(new Empty());
             settings.MaxAmount.ShouldBe(15_00000000);
             settings.MinAmount.ShouldBe(5_00000000);
         }
-        
+
         [Fact]
         public async Task SetLimitSettingsTests_Fail_InvalidInput()
         {

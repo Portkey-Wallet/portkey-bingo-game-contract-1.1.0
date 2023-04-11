@@ -1,10 +1,9 @@
-using Google.Protobuf.WellKnownTypes;
 using System.Linq;
 using AElf.Contracts.MultiToken;
 using AElf.CSharp.Core;
 using AElf.Sdk.CSharp;
-using AElf.Sdk.CSharp.State;
 using AElf.Types;
+using Google.Protobuf.WellKnownTypes;
 
 namespace AElf.Contracts.BingoGameContract
 {
@@ -113,8 +112,8 @@ namespace AElf.Contracts.BingoGameContract
 
             Assert(boutInformation != null, "Bout not found.");
 
-            Assert(!boutInformation.IsComplete, "Bout already finished.");
-            var targetHeight = boutInformation.PlayBlockHeight.Add(GetLagHeight());
+            Assert(!boutInformation!.IsComplete, "Bout already finished.");
+            var targetHeight = boutInformation.PlayBlockHeight.Add(1);
             Assert(targetHeight <= Context.CurrentHeight, "Invalid target height.");
 
             if (State.ConsensusContract.Value == null)
@@ -132,7 +131,8 @@ namespace AElf.Contracts.BingoGameContract
                 "Still preparing your game result, please wait for a while :)");
 
             var usefulHash = HashHelper.ConcatAndCompute(randomHash, playerInformation.Seed);
-            var bitArraySum = SumHash(usefulHash);
+            // var bitArraySum = SumHash(usefulHash);
+            var bitArraySum = (int)Context.ConvertHashToInt64(usefulHash, 0, 256);
             var bitArraySumResult = GetBitArraySumResult(bitArraySum);
             var isWin = GetResult(bitArraySumResult, boutInformation.Type);
             var award = isWin ? boutInformation.Amount : -boutInformation.Amount;
@@ -151,7 +151,7 @@ namespace AElf.Contracts.BingoGameContract
             boutInformation.Award = award;
             boutInformation.IsComplete = true;
             boutInformation.RandomNumber = bitArraySum;
-            
+
             State.PlayerInformation[Context.Sender] = playerInformation;
             return new BoolValue { Value = isWin };
         }
@@ -198,14 +198,14 @@ namespace AElf.Contracts.BingoGameContract
         public override Int32Value GetRandomNumber(Hash input)
         {
             var playerInformation = GetPlayerInformation();
-            
+
             Assert(input != null && !input.Value.IsNullOrEmpty(), "Invalid input");
-            
+
             var boutInformation = playerInformation.Bouts.FirstOrDefault(i => i.PlayId == input);
-            
+
             Assert(boutInformation != null, "Bout not found.");
 
-            return new Int32Value{Value = boutInformation.RandomNumber};
+            return new Int32Value { Value = boutInformation!.RandomNumber };
         }
     }
 }

@@ -1,7 +1,5 @@
-using System.Collections;
 using AElf.CSharp.Core;
 using AElf.Sdk.CSharp;
-using AElf.Types;
 using Google.Protobuf.WellKnownTypes;
 
 namespace AElf.Contracts.BingoGameContract
@@ -46,59 +44,58 @@ namespace AElf.Contracts.BingoGameContract
         /// </summary>
         /// <param name="bitArraySum"></param>
         /// <returns></returns>
-        private int GetKind(int bitArraySum)
-        {
-            if (bitArraySum <= 15 || bitArraySum >= 240)
-                return 4;
+        // private int GetKind(int bitArraySum)
+        // {
+        //     if (bitArraySum <= 15 || bitArraySum >= 240)
+        //         return 4;
+        //
+        //     if (bitArraySum <= 47 || bitArraySum >= 208)
+        //         return 3;
+        //
+        //     if (bitArraySum <= 95 || bitArraySum >= 160)
+        //         return 2;
+        //
+        //     return 1;
+        // }
 
-            if (bitArraySum <= 47 || bitArraySum >= 208)
-                return 3;
+        // private long CalculateAward(long amount, int kind)
+        // {
+        //     switch (kind)
+        //     {
+        //         case 1:
+        //             return amount.Div(10);
+        //         case 2:
+        //             return amount.Mul(4).Div(10);
+        //         case 3:
+        //             return amount.Mul(7).Div(10);
+        //         case 4:
+        //             return amount;
+        //         default:
+        //             return 0;
+        //     }
+        // }
 
-            if (bitArraySum <= 95 || bitArraySum >= 160)
-                return 2;
+        // private int SumHash(Hash hash)
+        // {
+        //     var bitArray = new BitArray(hash.Value.ToByteArray());
+        //     var value = 0;
+        //     for (var i = 0; i < bitArray.Count; i++)
+        //     {
+        //         if (bitArray[i])
+        //             value += 1;
+        //     }
+        //
+        //     return value;
+        // }
 
-            return 1;
-        }
-
-        private long CalculateAward(long amount, int kind)
-        {
-            switch (kind)
-            {
-                case 1:
-                    return amount.Div(10);
-                case 2:
-                    return amount.Mul(4).Div(10);
-                case 3:
-                    return amount.Mul(7).Div(10);
-                case 4:
-                    return amount;
-                default:
-                    return 0;
-            }
-        }
-
-        private int SumHash(Hash hash)
-        {
-            var bitArray = new BitArray(hash.Value.ToByteArray());
-            var value = 0;
-            for (var i = 0; i < bitArray.Count; i++)
-            {
-                if (bitArray[i])
-                    value += 1;
-            }
-
-            return value;
-        }
-
-        private bool ConvertHashToBool(int bitArraySum)
-        {
-            return bitArraySum % 2 == 0;
-        }
-
+        // private bool ConvertHashToBool(int bitArraySum)
+        // {
+        //     return bitArraySum % 2 == 0;
+        // }
         private bool GetBitArraySumResult(int bitArraySum)
         {
-            Assert(bitArraySum is >= 0 and <= 256, $"random number: {bitArraySum} error");
-            if (bitArraySum < 129)
+            Assert(bitArraySum is >= 0 and <= 255, $"random number: {bitArraySum} error");
+            if (bitArraySum < 128)
             {
                 return false;
             }
