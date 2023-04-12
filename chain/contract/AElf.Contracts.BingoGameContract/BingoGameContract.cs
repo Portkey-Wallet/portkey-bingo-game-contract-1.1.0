@@ -91,11 +91,11 @@ namespace AElf.Contracts.BingoGameContract
                 Type = input.Type,
                 PlayId = Context.OriginTransactionId
             };
-            
+
             playerInformation.Bouts.Add(boutInformation);
 
             State.PlayerInformation[Context.Sender] = playerInformation;
-            
+
             Context.Fire(new Played
             {
                 PlayBlockHeight = boutInformation.PlayBlockHeight,
@@ -163,7 +163,7 @@ namespace AElf.Contracts.BingoGameContract
             boutInformation.RandomNumber = bitArraySum;
 
             State.PlayerInformation[Context.Sender] = playerInformation;
-            
+
             Context.Fire(new Bingoed
             {
                 PlayBlockHeight = boutInformation.PlayBlockHeight,
@@ -175,7 +175,7 @@ namespace AElf.Contracts.BingoGameContract
                 RandomNumber = boutInformation.RandomNumber,
                 Type = boutInformation.Type
             });
-            
+
             return new BoolValue { Value = isWin };
         }
 
@@ -229,6 +229,22 @@ namespace AElf.Contracts.BingoGameContract
             Assert(boutInformation != null, "Bout not found.");
 
             return new Int32Value { Value = boutInformation!.RandomNumber };
+        }
+
+        public override BoutInformation GetBoutInformation(GetBoutInformationInput input)
+        {
+            Assert(input != null, "Invalid input");
+            Assert(input!.PlayId != null && !input.PlayId.Value.IsNullOrEmpty(), "Invalid playId");
+            Assert(input.Address != null && !input.Address.Value.IsNullOrEmpty(), "Invalid address");
+
+            var playerInformation = State.PlayerInformation[input.Address];
+            Assert(playerInformation != null, "Player not registered before.");
+
+            var boutInformation = playerInformation!.Bouts.FirstOrDefault(i => i.PlayId == input.PlayId);
+
+            Assert(boutInformation != null, "Bout not found.");
+
+            return boutInformation;
         }
     }
 }

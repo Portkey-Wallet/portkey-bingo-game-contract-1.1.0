@@ -178,7 +178,7 @@ namespace AElf.Contracts.BingoGameContract
                 MinAmount = -1
             });
             result.TransactionResult.Error.ShouldContain("Invalid input");
-            
+
             result = await BingoGameContractStub.SetLimitSettings.SendWithExceptionAsync(new LimitSettings
             {
                 MinAmount = 5_00000000,

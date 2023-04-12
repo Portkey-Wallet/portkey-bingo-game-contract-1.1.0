@@ -35,8 +35,10 @@ service BingoGameContract {
     rpc GetLimitSettings (google.protobuf.Empty) returns (LimitSettings) {
         option (aelf.is_view) = true;
     }
-    
     rpc GetRandomNumber (aelf.Hash) returns (google.protobuf.Int32Value) {
+        option (aelf.is_view) = true;
+    }
+    rpc GetBoutInformation (GetBoutInformationInput) returns (BoutInformation) {
         option (aelf.is_view) = true;
     }
 }
@@ -49,6 +51,11 @@ enum BingoType {
 message PlayInput {
     int64 amount = 1;
     BingoType type = 2;
+}
+
+message GetBoutInformationInput {
+    aelf.Hash play_id = 1;
+    aelf.Address address = 2;
 }
 
 message PlayerInformation {
