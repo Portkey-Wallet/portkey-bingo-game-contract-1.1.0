@@ -41,10 +41,14 @@ service BingoGameContract {
     }
 }
 
+enum BingoType {
+    Small = 0;
+    Large = 1;
+}
+
 message PlayInput {
     int64 amount = 1;
-    // true = large, false = small
-    bool type = 2;
+    BingoType type = 2;
 }
 
 message PlayerInformation {
@@ -60,11 +64,32 @@ message BoutInformation {
     bool is_complete = 4;
     aelf.Hash play_id = 5;
     int64 bingo_block_height = 6;
-    bool type = 7;
+    BingoType type = 7;
     int32 random_number = 8;
 }
 
 message LimitSettings {
     int64 min_amount = 1;
     int64 max_amount = 2;
+}
+
+// LogEvent
+message Played {
+    option (aelf.is_event) = true;
+    int64 play_block_height = 1 [(aelf.is_indexed) = true];
+    int64 amount = 2 [(aelf.is_indexed) = true];
+    BingoType type = 3 [(aelf.is_indexed) = true];
+    aelf.Hash play_id = 4 [(aelf.is_indexed) = true];
+}
+
+message Bingoed {
+    option (aelf.is_event) = true;
+    int64 play_block_height = 1 [(aelf.is_indexed) = true];
+    int64 amount = 2 [(aelf.is_indexed) = true];
+    int64 award = 3 [(aelf.is_indexed) = true];
+    bool is_complete = 4 [(aelf.is_indexed) = true];
+    aelf.Hash play_id = 5 [(aelf.is_indexed) = true];
+    int64 bingo_block_height = 6 [(aelf.is_indexed) = true];
+    BingoType type = 7 [(aelf.is_indexed) = true];
+    int32 random_number = 8 [(aelf.is_indexed) = true];
 }

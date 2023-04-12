@@ -38,28 +38,25 @@ namespace AElf.Contracts.BingoGameContract
             var height = await BingoGameContractStub.Play.SendAsync(new PlayInput
             {
                 Amount = amount,
-                Type = true
+                Type = BingoType.Large
             });
             var information = await BingoGameContractStub.GetPlayerInformation.CallAsync(DefaultAddress);
             information.Bouts.First().Amount.ShouldBe(amount);
-            information.Bouts.First().Type.ShouldBe(true);
+            information.Bouts.First().Type.ShouldBe(BingoType.Large);
             information.Bouts.First().PlayBlockHeight.ShouldBe(height.Output.Value - 1);
 
             return information.Bouts.First().PlayId;
         }
 
         [Fact]
-        public async Task PlayTests_Fail_InvalidAmount()
+        public async Task PlayTests_Fail_InvalidInput()
         {
             await RegisterTests();
             await InitializeAsync();
 
-            var amount = 0;
-
             var result = await BingoGameContractStub.Play.SendWithExceptionAsync(new PlayInput
             {
-                Amount = amount,
-                Type = true
+                Amount = 0
             });
             result.TransactionResult.Error.ShouldContain("Invalid bet amount.");
         }
@@ -179,6 +176,13 @@ namespace AElf.Contracts.BingoGameContract
             var result = await BingoGameContractStub.SetLimitSettings.SendWithExceptionAsync(new LimitSettings
             {
                 MinAmount = -1
+            });
+            result.TransactionResult.Error.ShouldContain("Invalid input");
+            
+            result = await BingoGameContractStub.SetLimitSettings.SendWithExceptionAsync(new LimitSettings
+            {
+                MinAmount = 5_00000000,
+                MaxAmount = 4_00000000
             });
             result.TransactionResult.Error.ShouldContain("Invalid input");
         }

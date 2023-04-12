@@ -84,15 +84,25 @@ namespace AElf.Contracts.BingoGameContract
                 Memo = "Enjoy!"
             });
 
-            playerInformation.Bouts.Add(new BoutInformation
+            var boutInformation = new BoutInformation
             {
                 PlayBlockHeight = Context.CurrentHeight,
                 Amount = input.Amount,
                 Type = input.Type,
                 PlayId = Context.OriginTransactionId
-            });
+            };
+            
+            playerInformation.Bouts.Add(boutInformation);
 
             State.PlayerInformation[Context.Sender] = playerInformation;
+            
+            Context.Fire(new Played
+            {
+                PlayBlockHeight = boutInformation.PlayBlockHeight,
+                PlayId = boutInformation.PlayId,
+                Amount = boutInformation.Amount,
+                Type = boutInformation.Type
+            });
 
             return new Int64Value { Value = Context.CurrentHeight.Add(GetLagHeight()) };
         }
@@ -153,6 +163,19 @@ namespace AElf.Contracts.BingoGameContract
             boutInformation.RandomNumber = bitArraySum;
 
             State.PlayerInformation[Context.Sender] = playerInformation;
+            
+            Context.Fire(new Bingoed
+            {
+                PlayBlockHeight = boutInformation.PlayBlockHeight,
+                PlayId = boutInformation.PlayId,
+                Amount = boutInformation.Amount,
+                Award = boutInformation.Award,
+                BingoBlockHeight = boutInformation.BingoBlockHeight,
+                IsComplete = boutInformation.IsComplete,
+                RandomNumber = boutInformation.RandomNumber,
+                Type = boutInformation.Type
+            });
+            
             return new BoolValue { Value = isWin };
         }
 
@@ -178,7 +201,7 @@ namespace AElf.Contracts.BingoGameContract
         public override Empty SetLimitSettings(LimitSettings input)
         {
             Assert(State.Admin.Value == Context.Sender, "No permission");
-            Assert(input.MinAmount >= 0 && input.MaxAmount >= 0, "Invalid input");
+            Assert(input.MinAmount >= 0 && input.MaxAmount >= input.MinAmount, "Invalid input");
 
             State.MinimumBet.Value = input.MinAmount;
             State.MaximumBet.Value = input.MaxAmount;
