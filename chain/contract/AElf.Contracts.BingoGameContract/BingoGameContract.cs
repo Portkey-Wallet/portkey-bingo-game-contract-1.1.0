@@ -60,6 +60,14 @@ namespace AElf.Contracts.BingoGameContract
 
             State.Initialized.Value = true;
         }
+        
+        private void LimitBetAmount(PlayerInformation information)
+        {
+            while (information.Bouts.Count >= BingoGameContractConstants.MaximumBetTimes)
+            {
+                information.Bouts.RemoveAt(0);
+            }
+        }
 
         public override Int64Value Play(PlayInput input)
         {
@@ -83,6 +91,8 @@ namespace AElf.Contracts.BingoGameContract
                 Symbol = BingoGameContractConstants.CardSymbol,
                 Memo = "Enjoy!"
             });
+
+            LimitBetAmount(playerInformation);
 
             var boutInformation = new BoutInformation
             {
@@ -191,7 +201,7 @@ namespace AElf.Contracts.BingoGameContract
         {
             State.PlayerInformation.Remove(Context.Sender);
             return new Empty();
-        }
+        } 
 
         public override PlayerInformation GetPlayerInformation(Address input)
         {

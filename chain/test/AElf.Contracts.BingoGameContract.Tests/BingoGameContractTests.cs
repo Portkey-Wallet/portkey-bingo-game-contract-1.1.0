@@ -94,7 +94,7 @@ namespace AElf.Contracts.BingoGameContract
             });
 
             var information = await BingoGameContractStub.GetPlayerInformation.CallAsync(DefaultAddress);
-            var bout = information.Bouts.First();
+            var bout = information.Bouts.Last();
 
             var isWin = await BingoGameContractStub.Bingo.SendAsync(bout.PlayId);
             var balance2 = await TokenContractStub.GetBalance.CallAsync(new GetBalanceInput
@@ -104,7 +104,7 @@ namespace AElf.Contracts.BingoGameContract
             });
 
             information = await BingoGameContractStub.GetPlayerInformation.CallAsync(DefaultAddress);
-            bout = information.Bouts.First();
+            bout = information.Bouts.Last();
 
             if (isWin.Output.Value)
             {
