@@ -232,7 +232,7 @@ namespace AElf.Contracts.BingoGameContract
                 }
             }
 
-            return Hash.Empty;
+            return null;
         }
 
         private Hash GetCurrentOutValue(long roundNumber, Timestamp playTime)
