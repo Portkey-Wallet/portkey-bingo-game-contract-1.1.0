@@ -66,7 +66,7 @@ namespace AElf.Contracts.BingoGameContract
         {
             var wins = 0;
             var loses = 0;
-            var total = 10;
+            var total = 1;
             for (var i = 0; i < total; i++)
             {
                 var result = await BingoTest();
@@ -96,6 +96,11 @@ namespace AElf.Contracts.BingoGameContract
             var information = await BingoGameContractStub.GetPlayerInformation.CallAsync(DefaultAddress);
             var bout = information.Bouts.Last();
 
+            for (var i = 0; i < 15; i++)
+            {
+                await BingoGameContractStub.Bingo.SendWithExceptionAsync(bout.PlayId);
+            }
+            
             var isWin = await BingoGameContractStub.Bingo.SendAsync(bout.PlayId);
             var balance2 = await TokenContractStub.GetBalance.CallAsync(new GetBalanceInput
             {

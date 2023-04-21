@@ -1,6 +1,8 @@
 using System.Linq;
+using AElf.Contracts.Consensus.AEDPoS;
 using AElf.Contracts.MultiToken;
 using AElf.CSharp.Core;
+using AElf.CSharp.Core.Extension;
 using AElf.Sdk.CSharp;
 using AElf.Types;
 using Google.Protobuf.WellKnownTypes;
@@ -60,7 +62,7 @@ namespace AElf.Contracts.BingoGameContract
 
             State.Initialized.Value = true;
         }
-        
+
         private void LimitBetAmount(PlayerInformation information)
         {
             while (information.Bouts.Count >= BingoGameContractConstants.MaximumBetTimes)
@@ -94,12 +96,16 @@ namespace AElf.Contracts.BingoGameContract
 
             LimitBetAmount(playerInformation);
 
+            var roundNumber = State.ConsensusContract.GetCurrentRoundNumber.Call(new Empty());
+
             var boutInformation = new BoutInformation
             {
                 PlayBlockHeight = Context.CurrentHeight,
                 Amount = input.Amount,
                 Type = input.Type,
-                PlayId = Context.OriginTransactionId
+                PlayId = Context.OriginTransactionId,
+                RoundNumber = roundNumber.Value,
+                PlayTime = Context.CurrentBlockTime
             };
 
             playerInformation.Bouts.Add(boutInformation);
@@ -133,7 +139,7 @@ namespace AElf.Contracts.BingoGameContract
             Assert(boutInformation != null, "Bout not found.");
 
             Assert(!boutInformation!.IsComplete, "Bout already finished.");
-            var targetHeight = boutInformation.PlayBlockHeight.Add(1);
+            var targetHeight = boutInformation.PlayBlockHeight.Add(BingoGameContractConstants.BingoBlockHeight);
             Assert(targetHeight <= Context.CurrentHeight, "Invalid target height.");
 
             if (State.ConsensusContract.Value == null)
@@ -149,6 +155,36 @@ namespace AElf.Contracts.BingoGameContract
 
             Assert(randomHash != null && !randomHash.Value.IsNullOrEmpty(),
                 "Still preparing your game result, please wait for a while :)");
+
+            var roundNumber = GetRoundNumber(boutInformation.RoundNumber);
+            var bingoBlockTime = BingoGameContractConstants.BingoBlockHeight.Div(2);
+            var outValue = Hash.Empty;
+
+            var round = State.ConsensusContract.GetRoundInformation.Call(new Int64Value
+            {
+                Value = roundNumber
+            });
+            var time = round.RealTimeMinersInformation.Values.FirstOrDefault(m =>
+                m.ActualMiningTimes.Contains(boutInformation.PlayTime.AddSeconds(bingoBlockTime)));
+
+            if (time == null)
+            {
+                var list = round.RealTimeMinersInformation.Values.OrderByDescending(m => m.Order).ToList();
+                foreach (var miner in list)
+                {
+                    var timestamp = miner.ActualMiningTimes.FirstOrDefault(t =>
+                        t < boutInformation.PlayTime.AddSeconds(bingoBlockTime));
+                    if (timestamp != null)
+                    {
+                        time = miner;
+                        break;
+                    }
+                }
+            }
+
+            outValue = time?.OutValue;
+
+            randomHash = HashHelper.XorAndCompute(randomHash, outValue);
 
             var usefulHash = HashHelper.ConcatAndCompute(randomHash, playerInformation.Seed);
             // var bitArraySum = SumHash(usefulHash);
@@ -189,6 +225,18 @@ namespace AElf.Contracts.BingoGameContract
             return new BoolValue { Value = isWin };
         }
 
+        private long GetRoundNumber(long playRoundNumber)
+        {
+            var roundNumber = State.ConsensusContract.GetCurrentRoundNumber.Call(new Empty()).Value;
+
+            if (playRoundNumber < roundNumber)
+            {
+                return playRoundNumber.Add(1);
+            }
+
+            return roundNumber;
+        }
+
         public override Int64Value GetAward(Hash input)
         {
             var boutInformation = GetPlayerInformation().Bouts.FirstOrDefault(i => i.PlayId == input);
@@ -201,7 +249,7 @@ namespace AElf.Contracts.BingoGameContract
         {
             State.PlayerInformation.Remove(Context.Sender);
             return new Empty();
-        } 
+        }
 
         public override PlayerInformation GetPlayerInformation(Address input)
         {

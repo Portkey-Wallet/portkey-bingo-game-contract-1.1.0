@@ -73,6 +73,8 @@ message BoutInformation {
     int64 bingo_block_height = 6;
     BingoType type = 7;
     int32 random_number = 8;
+    int64 round_number = 9;
+    google.protobuf.Timestamp play_time = 10;
 }
 
 message LimitSettings {
