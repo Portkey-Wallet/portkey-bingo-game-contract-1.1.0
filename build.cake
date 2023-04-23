@@ -3,7 +3,7 @@
 
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Debug");
-var rootPath     = "./chain";
+var rootPath     = "./";
 var srcPath      = rootPath + "src/";
 var contractPath = rootPath + "contract/";
 var testPath     = rootPath + "test/";
