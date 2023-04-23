@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using AElf.Blockchains.BasicBaseChain;
+using AElf.Boilerplate.MainChain.ContractInitDataProviders;
 using AElf.Boilerplate.SystemTransactionGenerator;
 using AElf.Database;
 using AElf.Kernel.Infrastructure;

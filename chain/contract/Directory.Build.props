@@ -3,5 +3,5 @@
     <ItemGroup>
         <PackageReference Include="AElf.Sdk.CSharp" Version="1.3.0" />
     </ItemGroup>
-    <Import Project="..\AElf.Contract.Tools.targets" />
+    <Import Project="..\Portkey.Contract.Tools.targets" />
 </Project>

@@ -1,8 +1,7 @@
 using AElf.GovernmentSystem;
-using AElf.Kernel.Proposal;
 using Volo.Abp.DependencyInjection;
 
-namespace AElf.Boilerplate.MainChain
+namespace AElf.Boilerplate.MainChain.ContractInitDataProviders
 {
     public class ParliamentContractInitializationDataProvider : IParliamentContractInitializationDataProvider,
         ITransientDependency

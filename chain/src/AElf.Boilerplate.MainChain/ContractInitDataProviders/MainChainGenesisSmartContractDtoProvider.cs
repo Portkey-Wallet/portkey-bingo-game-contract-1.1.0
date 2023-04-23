@@ -5,7 +5,7 @@ using AElf.Kernel.SmartContract;
 using AElf.Kernel.SmartContract.Application;
 using Microsoft.Extensions.Options;
 
-namespace AElf.Boilerplate.MainChain
+namespace AElf.Boilerplate.MainChain.ContractInitDataProviders
 {
     public class MainChainGenesisSmartContractDtoProvider : GenesisSmartContractDtoProviderBase
     {

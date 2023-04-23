@@ -1,6 +1,6 @@
 using AElf.Kernel.Token;
 
-namespace AElf.Boilerplate.MainChain
+namespace AElf.Boilerplate.MainChain.ContractInitDataProviders
 {
     public class TokenContractInitializationDataProvider : ITokenContractInitializationDataProvider
     {

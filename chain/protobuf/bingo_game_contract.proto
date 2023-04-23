@@ -7,10 +7,10 @@ import "google/protobuf/wrappers.proto";
 import "google/protobuf/timestamp.proto";
 import "acs12.proto";
 
-option csharp_namespace = "AElf.Contracts.BingoGameContract";
+option csharp_namespace = "Portkey.Contracts.BingoGameContract";
 
 service BingoGameContract {
-    option (aelf.csharp_state) = "AElf.Contracts.BingoGameContract.BingoGameContractState";
+    option (aelf.csharp_state) = "Portkey.Contracts.BingoGameContract.BingoGameContractState";
     option (aelf.base) = "acs12.proto";
 
     // Actions
@@ -23,6 +23,8 @@ service BingoGameContract {
     rpc Quit (google.protobuf.Empty) returns (google.protobuf.Empty) {
     }
     rpc SetLimitSettings (LimitSettings) returns (google.protobuf.Empty) {
+    }
+    rpc Initialize (google.protobuf.Empty) returns (google.protobuf.Empty) {
     }
 
     // Views

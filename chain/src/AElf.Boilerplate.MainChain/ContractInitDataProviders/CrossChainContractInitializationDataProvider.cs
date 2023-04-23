@@ -1,7 +1,7 @@
 using AElf.CrossChain;
 using Volo.Abp.DependencyInjection;
 
-namespace AElf.Boilerplate.MainChain
+namespace AElf.Boilerplate.MainChain.ContractInitDataProviders
 {
     public class CrossChainContractInitializationDataProvider : ICrossChainContractInitializationDataProvider,
         ITransientDependency

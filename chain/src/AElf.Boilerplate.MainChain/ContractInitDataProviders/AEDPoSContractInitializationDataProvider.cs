@@ -2,7 +2,7 @@ using AElf.Kernel.Consensus.AEDPoS;
 using Microsoft.Extensions.Options;
 using Volo.Abp.DependencyInjection;
 
-namespace AElf.Boilerplate.MainChain
+namespace AElf.Boilerplate.MainChain.ContractInitDataProviders
 {
     // ReSharper disable once InconsistentNaming
     public class AEDPoSContractInitializationDataProvider : IAEDPoSContractInitializationDataProvider,
