@@ -1,34 +1,61 @@
-# AElf-boilerplate - A framework for smart contract and dApp development
+# Portkey Bingogame
 
-BRANCH | AZURE PIPELINES(chain) | AZURE PIPELINES(ios) | AZURE PIPELINES(android)
--------|------------------------|----------------------|-------------------------
-MASTER |[![Build Status](https://dev.azure.com/AElfProject/aelf-boilerplate/_apis/build/status/AElfProject.aelf-boilerplate?branchName=master)](https://dev.azure.com/AElfProject/aelf-boilerplate/_build/latest?definitionId=7&branchName=master) | [![Build Status](https://dev.azure.com/AElfProject/aelf-boilerplate/_apis/build/status/AElfProject.aelf-boilerplate%5Bcreate-release%5D?branchName=master)](https://dev.azure.com/AElfProject/aelf-boilerplate/_build/latest?definitionId=12&branchName=master) | [![Build Status](https://dev.azure.com/AElfProject/aelf-boilerplate/_apis/build/status/AElfProject.aelf-boilerplate%5Bcreate-release%5D?branchName=master)](https://dev.azure.com/AElfProject/aelf-boilerplate/_build/latest?definitionId=12&branchName=master)
-DEV    |[![Build Status](https://dev.azure.com/AElfProject/aelf-boilerplate/_apis/build/status/AElfProject.aelf-boilerplate?branchName=dev)](https://dev.azure.com/AElfProject/aelf-boilerplate/_build/latest?definitionId=7&branchName=dev) | [![Build Status](https://dev.azure.com/AElfProject/aelf-boilerplate/_apis/build/status/AElfProject.aelf-boilerplate%5Bcreate-release%5D?branchName=dev)](https://dev.azure.com/AElfProject/aelf-boilerplate/_build/latest?definitionId=12&branchName=dev) | [![Build Status](https://dev.azure.com/AElfProject/aelf-boilerplate/_apis/build/status/AElfProject.aelf-boilerplate%5Bcreate-release%5D?branchName=dev)](https://dev.azure.com/AElfProject/aelf-boilerplate/_build/latest?definitionId=12&branchName=dev)
+A minimalistic game demo with @portkey/did-ui-react
 
-Welcome to AElf Boilerplate's official GitHub repo !
+## **Introduction**
 
-Boilerplate is an environment that is used to develop smart contracts and dApps. Boilerplate shares some code with AElf and internally runs an AElf node.
+Bingogame is a fast and straightforward game with quick gameplay and instant results. One of the players' objectives is to guess whether the random number in the next round falls within the range of big or small numbers. The random number is issued based on the aelf's AEDPoS consensus random number principle.
 
-## Getting Started
+## **How to use**
 
-You can follow the tutorials [**here**](https://aelf-boilerplate-docs.readthedocs.io/en/latest/) that will get you started with contract development on Boilerplate. This tutorial also will guide you through the needed dependencies.
+Before cloning the code and deploying the Portkey Bingogame, command dependencies, and development tools are needed. You can follow:
 
-## Boilerplate
+- [Common dependencies](https://aelf-boilerplate-docs.readthedocs.io/en/latest/overview/dependencies.html)
+- [Building sources and development tools](https://aelf-boilerplate-docs.readthedocs.io/en/latest/overview/tools.html)
 
-At the top level this repo contains two folders: **chain** and **web**. The chain folder contains code to facilitate contract development whereas the web folder contains the front end part of the dApp.
+The following command will clone Portkey Bingogame into a folder. Please open a terminal and enter the following command:
 
-## chain
+```Bash
+git clone https://github.com/Portkey-Wallet/portkey-contracts-bingo-game
+```
 
-The process for developing the smart contract goes somewhat like this: define the smart contract, generate the code from the definition, implement the logic by using the generated code, test it and then deploy it.
+The next step is to build the contract to ensure everything is working correctly. Once everything is built, you can run as follows:
 
-The chain folder contains four sub-folders:
-- **contract**: the implementation of the contract.
-- **protobuf**: the definition of the contract.
-- **test**: the unit tests of the contract.
-- **src**: Boilerplate's core code, some elements need changing in here for the contract to be deployed.
+```Bash
+# enter the Launcher folder and build 
+cd src/AElf.Boilerplate.BingogameContract.Launcher
 
-## Versioning
-We use Semantic Versioning (SemVer) for versioning, if you're intereted in closely following AElf's developement please check out the SemVer docs.
+# build
+dotnet build
 
-## License
-AElf Boilerplate is licenced under MIT
+# run the node 
+dotnet run
+```
+
+It will run a local temporary aelf node and automatically deploy the Portkey Bingogame. You can access the node from `localhost:1235`.
+
+This temporary aelf node runs on a framework called Boilerplate for deploying smart contracts easily. When running it, you might see errors showing incorrect password. To solve this, you need to back up your `aelf/keys`folder and start with an empty keys folder. Once you have cleaned the keys folder, stop and restart the node with `dotnet run`command shown above. It will automatically generate a new aelf account for you. This account will be used for running the aelf node and deploying the Portkey Bingogame.
+
+## **Test**
+
+You can easily run unit tests on Portkey Bingogame. Navigate to the Portkey.Contracts.CA.Tests and run:
+
+```Bash
+cd ../../test/Portkey.Contracts.BingogameContract.Tests
+dotnet test
+```
+
+## **Contributing**
+
+We welcome contributions to the Portkey Bingogame project. If you would like to contribute, please fork the repository and submit a pull request with your changes. Before submitting a pull request, please ensure that your code is well-tested and adheres to the aelf coding standards.
+
+## **Contact**
+
+If you have any questions or feedback, please feel free to contact us at the Portkey community channels. You can find us on Discord, Telegram, and other social media platforms.
+
+Links:
+
+- Website: https://portkey.finance/
+- Twitter: https://twitter.com/Portkey_DID
+- Discord: https://discord.com/invite/EUBq3rHQhr
+- Telegram: https://t.me/Portkey_Official_Group
