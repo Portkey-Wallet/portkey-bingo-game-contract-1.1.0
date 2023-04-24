@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using AElf;
 using AElf.Contracts.MultiToken;
@@ -189,10 +190,27 @@ namespace Portkey.Contracts.BingoGameContract
             {
                 Value = roundNumber
             });
-            var time = round.RealTimeMinersInformation.Values.FirstOrDefault(m =>
+
+            var miners = round.RealTimeMinersInformation.Values.ToList();
+            
+            var miner = miners.FirstOrDefault(m =>
                 m.ActualMiningTimes.Contains(playTime.AddSeconds(bingoBlockTime)));
 
-            return time?.OutValue;
+            if (miner == null) return null;
+
+            var value = miner.OutValue;
+
+            if (value == null || value.Value.IsNullOrEmpty())
+            {
+                if (miners.Last().Equals(miner))
+                {
+                    miners.Remove(miner);
+                    
+                    value = miners.LastOrDefault()?.OutValue;
+                }
+            }
+            
+            return value;
         }
 
         private Hash GetLatestOutValue(long roundNumber, Timestamp playTime)
@@ -203,18 +221,30 @@ namespace Portkey.Contracts.BingoGameContract
             {
                 Value = roundNumber
             });
-            var list = round.RealTimeMinersInformation.Values.OrderBy(m => m.Order).ToList();
-            foreach (var miner in list)
+
+            var miners = round.RealTimeMinersInformation.Values.OrderBy(m => m.Order).ToList();
+
+            Hash value = null;
+            foreach (var miner in miners)
             {
                 var timestamp = miner.ActualMiningTimes.FirstOrDefault(t =>
                     t > playTime.AddSeconds(bingoBlockTime));
                 if (timestamp != null)
                 {
-                    return miner.OutValue;
+                    value = miner.OutValue;
+                    
+                    if (value == null || value.Value.IsNullOrEmpty())
+                    {
+                        if (miners.Last().Equals(miner))
+                        {
+                            miners.Remove(miner);
+                            value = miners.LastOrDefault()?.OutValue;
+                        }
+                    }
                 }
             }
 
-            return null;
+            return value;
         }
 
         private Hash GetCurrentOutValue(long roundNumber, Timestamp playTime)
