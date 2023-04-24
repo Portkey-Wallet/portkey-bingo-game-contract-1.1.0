@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Linq;
 using AElf;
 using AElf.Contracts.MultiToken;
@@ -192,7 +191,7 @@ namespace Portkey.Contracts.BingoGameContract
             });
 
             var miners = round.RealTimeMinersInformation.Values.ToList();
-            
+
             var miner = miners.FirstOrDefault(m =>
                 m.ActualMiningTimes.Contains(playTime.AddSeconds(bingoBlockTime)));
 
@@ -205,11 +204,11 @@ namespace Portkey.Contracts.BingoGameContract
                 if (miners.Last().Equals(miner))
                 {
                     miners.Remove(miner);
-                    
+
                     value = miners.LastOrDefault()?.OutValue;
                 }
             }
-            
+
             return value;
         }
 
@@ -232,12 +231,13 @@ namespace Portkey.Contracts.BingoGameContract
                 if (timestamp != null)
                 {
                     value = miner.OutValue;
-                    
+
                     if (value == null || value.Value.IsNullOrEmpty())
                     {
                         if (miners.Last().Equals(miner))
                         {
                             miners.Remove(miner);
+                           
                             value = miners.LastOrDefault()?.OutValue;
                         }
                     }
@@ -250,7 +250,6 @@ namespace Portkey.Contracts.BingoGameContract
         private Hash GetCurrentOutValue(long roundNumber, Timestamp playTime)
         {
             var outValue = GetOutValue(roundNumber, playTime);
-
             if (outValue != null) return outValue;
 
             outValue = GetLatestOutValue(roundNumber, playTime);
@@ -261,6 +260,7 @@ namespace Portkey.Contracts.BingoGameContract
             if (currentRoundNumber.Value > roundNumber)
             {
                 var outValueLatest = GetOutValue(roundNumber + 1, playTime);
+
                 if (outValueLatest == null)
                 {
                     outValueLatest = GetLatestOutValue(roundNumber + 1, playTime);

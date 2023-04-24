@@ -67,7 +67,7 @@ namespace Portkey.Contracts.BingoGameContract
             var height = await BingoGameContractStub.Play.SendAsync(new PlayInput
             {
                 Amount = amount,
-                Type = BingoType.Small
+                Type = BingoType.Large
             });
             
             var information = await BingoGameContractStub.GetPlayerInformation.CallAsync(DefaultAddress);
@@ -147,7 +147,7 @@ namespace Portkey.Contracts.BingoGameContract
                 balance2.Balance.ShouldBe(balance.Balance + bout.Award + bout.Amount);
 
                 var num = await BingoGameContractStub.GetRandomNumber.CallAsync(id);
-                num.Value.ShouldBeLessThan(128);
+                num.Value.ShouldBeGreaterThan(127);
             }
             else
             {
@@ -155,7 +155,7 @@ namespace Portkey.Contracts.BingoGameContract
                 balance2.Balance.ShouldBe(balance.Balance);
 
                 var num = await BingoGameContractStub.GetRandomNumber.CallAsync(id);
-                num.Value.ShouldBeGreaterThan(127);
+                num.Value.ShouldBeLessThan(128);
             }
 
             var award = await BingoGameContractStub.GetAward.CallAsync(bout.PlayId);
@@ -313,6 +313,15 @@ namespace Portkey.Contracts.BingoGameContract
             await BingoGameContractStub.Quit.SendAsync(new Empty());
             playInformation = await BingoGameContractStub.GetPlayerInformation.CallAsync(DefaultAddress);
             playInformation.Seed.ShouldBeNull();
+        }
+        
+        [Fact]
+        public async Task GetRandomNumberTests_Fail()
+        {
+            await RegisterTests();
+            await PlayAsync();
+            var result = await BingoGameContractStub.GetRandomNumber.SendWithExceptionAsync(new Hash());
+            result.TransactionResult.Error.ShouldContain("Invalid input");
         }
     }
 }
