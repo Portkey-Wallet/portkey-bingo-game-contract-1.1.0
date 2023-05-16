@@ -43,6 +43,23 @@ service BingoGameContract {
     rpc GetBoutInformation (GetBoutInformationInput) returns (BoutInformation) {
         option (aelf.is_view) = true;
     }
+    rpc GetRandomHash (GetRandomHashInput) returns (GetRandomHashOutput) {
+        option (aelf.is_view) = true;
+    }
+}
+
+message GetRandomHashInput {
+    aelf.Hash seed = 1;
+    int64 times = 2;
+}
+
+message GetRandomHashOutput {
+    repeated RandomResult random_results = 1;
+}
+
+message RandomResult {
+    aelf.Hash random_hash = 1;
+    int64 height = 2;
 }
 
 enum BingoType {

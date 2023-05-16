@@ -323,5 +323,16 @@ namespace Portkey.Contracts.BingoGameContract
             var result = await BingoGameContractStub.GetRandomNumber.SendWithExceptionAsync(new Hash());
             result.TransactionResult.Error.ShouldContain("Invalid input");
         }
+
+        [Fact]
+        public async Task Test()
+        {
+            var result = await BingoGameContractStub.GetRandomHash.CallAsync(new GetRandomHashInput
+            {
+                Seed = HashHelper.ComputeFrom("0"),
+                Times = 10
+            });
+            result.RandomResults.Count.ShouldBe(10);
+        }
     }
 }
