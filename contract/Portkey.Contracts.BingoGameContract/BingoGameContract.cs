@@ -25,7 +25,7 @@ namespace Portkey.Contracts.BingoGameContract
             Context.Fire(new Registered
             {
                 RegisterTime = information.RegisterTime,
-                PlayerAddress = Context.Sender.ToBase58(),
+                AelfAddress = Context.Sender.ToBase58(),
                 Seed = information.Seed
             });
 
@@ -93,7 +93,7 @@ namespace Portkey.Contracts.BingoGameContract
                 PlayId = boutInformation.PlayId,
                 Amount = boutInformation.Amount,
                 Type = boutInformation.Type,
-                PlayerAddress = Context.Sender.ToBase58(),
+                AelfAddress = Context.Sender.ToBase58(),
                 Symbol = BingoGameContractConstants.CardSymbol
             });
 
@@ -194,7 +194,8 @@ namespace Portkey.Contracts.BingoGameContract
                 IsComplete = boutInformation.IsComplete,
                 RandomNumber = boutInformation.RandomNumber,
                 Dices = boutInformation.Dices,
-                Type = boutInformation.Type
+                Type = boutInformation.Type,
+                AelfAddress = Context.Sender.ToBase58(),
             });
 
             return new BoolValue { Value = isWin };
