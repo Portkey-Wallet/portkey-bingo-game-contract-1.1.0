@@ -7,6 +7,8 @@ namespace Portkey.Contracts.BingoGameContract
     {
         public MappedState<Address, PlayerInformation> PlayerInformation { get; set; }
 
+        public MappedState<Hash, BoutInformation> BoutInformations { get; set; }
+
         public SingletonState<long> LagHeight { get; set; }
 
         public BoolState Initialized { get; set; }

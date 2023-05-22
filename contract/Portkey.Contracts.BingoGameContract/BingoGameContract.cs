@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using AElf;
 using AElf.Contracts.MultiToken;
@@ -21,6 +22,12 @@ namespace Portkey.Contracts.BingoGameContract
                 RegisterTime = Context.CurrentBlockTime
             };
             State.PlayerInformation[Context.Sender] = information;
+            Context.Fire(new Registered
+            {
+                RegisterTime = information.RegisterTime,
+                PlayerAddress = Context.Sender.ToBase58(),
+                Seed = information.Seed
+            });
 
             return new Empty();
         }
@@ -44,19 +51,10 @@ namespace Portkey.Contracts.BingoGameContract
             return new Empty();
         }
 
-        private void LimitBetAmount(PlayerInformation information)
-        {
-            while (information.Bouts.Count >= BingoGameContractConstants.MaximumBetTimes)
-            {
-                information.Bouts.RemoveAt(0);
-            }
-        }
-
         public override Int64Value Play(PlayInput input)
         {
             Assert(input.Amount >= State.MinimumBet.Value && input.Amount <= State.MaximumBet.Value,
                 "Invalid bet amount.");
-            var playerInformation = GetPlayerInformation();
 
             Context.LogDebug(() => $"Playing with amount {input.Amount}");
 
@@ -75,8 +73,6 @@ namespace Portkey.Contracts.BingoGameContract
                 Memo = "Enjoy!"
             });
 
-            LimitBetAmount(playerInformation);
-
             var roundNumber = State.ConsensusContract.GetCurrentRoundNumber.Call(new Empty());
 
             var boutInformation = new BoutInformation
@@ -86,36 +82,53 @@ namespace Portkey.Contracts.BingoGameContract
                 Type = input.Type,
                 PlayId = Context.OriginTransactionId,
                 RoundNumber = roundNumber.Value,
-                PlayTime = Context.CurrentBlockTime
+                PlayTime = Context.CurrentBlockTime,
+                Dices = new DiceList(),
             };
-
-            playerInformation.Bouts.Add(boutInformation);
-
-            State.PlayerInformation[Context.Sender] = playerInformation;
+            State.BoutInformations[Context.OriginTransactionId] = boutInformation;
 
             Context.Fire(new Played
             {
                 PlayBlockHeight = boutInformation.PlayBlockHeight,
                 PlayId = boutInformation.PlayId,
                 Amount = boutInformation.Amount,
-                Type = boutInformation.Type
+                Type = boutInformation.Type,
+                PlayerAddress = Context.Sender.ToBase58(),
+                Symbol = BingoGameContractConstants.CardSymbol
             });
 
             return new Int64Value { Value = Context.CurrentHeight.Add(BingoGameContractConstants.BingoBlockHeight) };
+        }    
+        private List<int> GetDices(Hash hashValue)
+        {
+            var hexString = hashValue.ToHex();
+            var dices = new List<int>();
+
+            for (int i = 0; i < 3; i++)
+            {
+                var startIndex = i * 8;
+                var subString = hexString.Substring(startIndex, 8);
+                var intValue = int.Parse(subString, System.Globalization.NumberStyles.HexNumber);
+                var dice = (intValue % 6 + 5) % 6 + 1;
+                dices.Add(dice);
+            }
+
+            return dices;
         }
 
+        
+        
         public override BoolValue Bingo(Hash input)
         {
             Context.LogDebug(() => $"Getting game result of play id: {input.ToHex()}");
 
+            Assert(input != null && !input.Value.IsNullOrEmpty(), "Invalid input.");
+
             var playerInformation = State.PlayerInformation[Context.Sender];
 
             Assert(playerInformation != null, $"User {Context.Sender} not registered before.");
-            Assert(playerInformation!.Bouts.Count > 0, $"User {Context.Sender} seems never join this game.");
 
-            var boutInformation = input == Hash.Empty
-                ? playerInformation.Bouts.First(i => i.BingoBlockHeight == 0)
-                : playerInformation.Bouts.FirstOrDefault(i => i.PlayId == input);
+            var boutInformation = State.BoutInformations[input];
 
             Assert(boutInformation != null, "Bout not found.");
 
@@ -143,7 +156,8 @@ namespace Portkey.Contracts.BingoGameContract
 
             var usefulHash = HashHelper.ConcatAndCompute(randomHash, playerInformation.Seed);
             // var bitArraySum = SumHash(usefulHash);
-            var bitArraySum = (int)Context.ConvertHashToInt64(usefulHash, 0, 256);
+            List<int> dices = GetDices(usefulHash);
+            var bitArraySum = dices.Sum();
             var bitArraySumResult = GetBitArraySumResult(bitArraySum);
             var isWin = GetResult(bitArraySumResult, boutInformation.Type);
             var award = isWin ? boutInformation.Amount : -boutInformation.Amount;
@@ -163,8 +177,12 @@ namespace Portkey.Contracts.BingoGameContract
             boutInformation.IsComplete = true;
             boutInformation.RandomNumber = bitArraySum;
             boutInformation.BingoBlockHeight = Context.CurrentHeight;
+            boutInformation.Dices.Dices.Add(dices[0]);
+            boutInformation.Dices.Dices.Add(dices[1]);
+            boutInformation.Dices.Dices.Add(dices[2]);
 
             State.PlayerInformation[Context.Sender] = playerInformation;
+            State.BoutInformations[input] = boutInformation;
 
             Context.Fire(new Bingoed
             {
@@ -175,6 +193,7 @@ namespace Portkey.Contracts.BingoGameContract
                 BingoBlockHeight = boutInformation.BingoBlockHeight,
                 IsComplete = boutInformation.IsComplete,
                 RandomNumber = boutInformation.RandomNumber,
+                Dices = boutInformation.Dices,
                 Type = boutInformation.Type
             });
 
@@ -237,7 +256,7 @@ namespace Portkey.Contracts.BingoGameContract
                         if (miners.Last().Equals(miner))
                         {
                             miners.Remove(miner);
-                           
+
                             value = miners.LastOrDefault()?.OutValue;
                         }
                     }
@@ -274,7 +293,8 @@ namespace Portkey.Contracts.BingoGameContract
 
         public override Int64Value GetAward(Hash input)
         {
-            var boutInformation = GetPlayerInformation().Bouts.FirstOrDefault(i => i.PlayId == input);
+            Assert(input != null && !input.Value.IsNullOrEmpty(), "Invalid input.");
+            var boutInformation = State.BoutInformations[input];
             return boutInformation == null
                 ? new Int64Value { Value = 0 }
                 : new Int64Value { Value = boutInformation.Award };
@@ -312,12 +332,11 @@ namespace Portkey.Contracts.BingoGameContract
         }
 
         public override Int32Value GetRandomNumber(Hash input)
-        {
+        {   
+            Assert(input != null && !input.Value.IsNullOrEmpty(), "Invalid input.");
             var playerInformation = GetPlayerInformation();
 
-            Assert(input != null && !input.Value.IsNullOrEmpty(), "Invalid input");
-
-            var boutInformation = playerInformation.Bouts.FirstOrDefault(i => i.PlayId == input);
+            var boutInformation = State.BoutInformations[input];
 
             Assert(boutInformation != null, "Bout not found.");
 
@@ -328,16 +347,89 @@ namespace Portkey.Contracts.BingoGameContract
         {
             Assert(input != null, "Invalid input");
             Assert(input!.PlayId != null && !input.PlayId.Value.IsNullOrEmpty(), "Invalid playId");
-            Assert(input.Address != null && !input.Address.Value.IsNullOrEmpty(), "Invalid address");
 
-            var playerInformation = State.PlayerInformation[input.Address];
-            Assert(playerInformation != null, "Player not registered before.");
-
-            var boutInformation = playerInformation!.Bouts.FirstOrDefault(i => i.PlayId == input.PlayId);
+            var boutInformation = State.BoutInformations[input.PlayId];
 
             Assert(boutInformation != null, "Bout not found.");
 
             return boutInformation;
         }
+
+        public override GetRandomHashOutput GetRandomHash(GetRandomHashInput input)
+        {
+            if (State.ConsensusContract.Value == null)
+            {
+                State.ConsensusContract.Value =
+                    Context.GetContractAddressByName(SmartContractConstants.ConsensusContractSystemName);
+            }
+
+            var result = new List<RandomResult>();
+
+            var output = State.ConsensusContract.GetCurrentRoundNumber.Call(new Empty());
+            var roundNumber = output.Value;
+            var currentHeight = Context.CurrentHeight;
+
+            while (roundNumber > 0 && result.Count < input.Times)
+            {
+                var round = State.ConsensusContract.GetRoundInformation.Call(new Int64Value
+                {
+                    Value = roundNumber
+                });
+
+                var miners = round.RealTimeMinersInformation.Values.Where(m => m.ActualMiningTimes.Count > 0)
+                    .OrderBy(m => m.Order).ToList();
+
+                var miner = miners.LastOrDefault();
+
+                while (miner != null)
+                {
+                    var outValue = miner.OutValue;
+                    if (outValue == null || outValue.Value.IsNullOrEmpty())
+                    {
+                        if (miners.Count < 2)
+                        {
+                            break;
+                        }
+
+                        outValue = miners[^2].OutValue;
+                    }
+
+                    for (int i = miner.ActualMiningTimes.Count - 1; i >= 0; i--)
+                    {
+                        var hash = State.ConsensusContract.GetRandomHash.Call(new Int64Value
+                        {
+                            Value = currentHeight
+                        });
+                        hash = HashHelper.XorAndCompute(hash, outValue);
+                        hash = HashHelper.ConcatAndCompute(hash, input.Seed);
+
+                        result.Add(new RandomResult
+                        {
+                            RandomHash = hash,
+                            Height = currentHeight
+                        });
+                        if (result.Count >= input.Times)
+                        {
+                            break;
+                        }
+
+                        currentHeight--;
+                    }
+
+                    miners.Remove(miner);
+                    miner = miners.FirstOrDefault();
+                }
+
+                roundNumber--;
+            }
+
+            result.Reverse();
+
+            return new GetRandomHashOutput
+            {
+                RandomResults = { result }
+            };
+        }
     }
+    
 }

@@ -46,16 +46,14 @@ namespace Portkey.Contracts.BingoGameContract
 
             var amount = 1_00000000;
 
-            await BingoGameContractStub.Play.SendAsync(new PlayInput
+            var tx = await BingoGameContractStub.Play.SendAsync(new PlayInput
             {
                 Amount = amount,
                 Type = BingoType.Large
             });
             var information = await BingoGameContractStub.GetPlayerInformation.CallAsync(DefaultAddress);
-            information.Bouts.First().Amount.ShouldBe(amount);
-            information.Bouts.First().Type.ShouldBe(BingoType.Large);
 
-            return information.Bouts.First().PlayId;
+            return tx.TransactionResult.TransactionId;
         }
 
         private async Task<Hash> PlayAsync()
@@ -69,9 +67,8 @@ namespace Portkey.Contracts.BingoGameContract
                 Amount = amount,
                 Type = BingoType.Large
             });
-            
-            var information = await BingoGameContractStub.GetPlayerInformation.CallAsync(DefaultAddress);
-            return information.Bouts.Last().PlayId;
+
+            return height.TransactionResult.TransactionId;
         }
 
         [Fact]
@@ -124,7 +121,10 @@ namespace Portkey.Contracts.BingoGameContract
             });
 
             var information = await BingoGameContractStub.GetPlayerInformation.CallAsync(DefaultAddress);
-            var bout = information.Bouts.Last();
+            var bout = await BingoGameContractStub.GetBoutInformation.CallAsync(new GetBoutInformationInput
+            {
+                PlayId = id
+            });
 
             for (var i = 0; i < 15; i++)
             {
@@ -139,7 +139,10 @@ namespace Portkey.Contracts.BingoGameContract
             });
 
             information = await BingoGameContractStub.GetPlayerInformation.CallAsync(DefaultAddress);
-            bout = information.Bouts.Last();
+            bout = await BingoGameContractStub.GetBoutInformation.CallAsync(new GetBoutInformationInput
+            {
+                PlayId = bout.PlayId
+            });
 
             if (isWin.Output.Value)
             {
@@ -147,7 +150,7 @@ namespace Portkey.Contracts.BingoGameContract
                 balance2.Balance.ShouldBe(balance.Balance + bout.Award + bout.Amount);
 
                 var num = await BingoGameContractStub.GetRandomNumber.CallAsync(id);
-                num.Value.ShouldBeGreaterThan(127);
+                num.Value.ShouldBeGreaterThan(10);
             }
             else
             {
@@ -155,7 +158,7 @@ namespace Portkey.Contracts.BingoGameContract
                 balance2.Balance.ShouldBe(balance.Balance);
 
                 var num = await BingoGameContractStub.GetRandomNumber.CallAsync(id);
-                num.Value.ShouldBeLessThan(128);
+                num.Value.ShouldBeLessThan(11);
             }
 
             var award = await BingoGameContractStub.GetAward.CallAsync(bout.PlayId);
@@ -174,7 +177,7 @@ namespace Portkey.Contracts.BingoGameContract
 
             await RegisterTests();
             result = await BingoGameContractStub.Bingo.SendWithExceptionAsync(Hash.Empty);
-            result.TransactionResult.Error.ShouldContain("seems never join this game.");
+            result.TransactionResult.Error.ShouldContain("Bout not found.");
         }
 
         [Fact]
@@ -283,14 +286,14 @@ namespace Portkey.Contracts.BingoGameContract
             {
                 PlayId = Hash.Empty
             });
-            result.TransactionResult.Error.ShouldContain("Invalid address");
+            result.TransactionResult.Error.ShouldContain("Bout not found.");
             
             result = await BingoGameContractStub.GetBoutInformation.SendWithExceptionAsync(new GetBoutInformationInput
             {
                 PlayId = Hash.Empty,
                 Address = UserAddress
             });
-            result.TransactionResult.Error.ShouldContain("Player not registered before.");
+            result.TransactionResult.Error.ShouldContain("Bout not found.");
 
             await RegisterTests();
             result = await BingoGameContractStub.GetBoutInformation.SendWithExceptionAsync(new GetBoutInformationInput
@@ -323,5 +326,16 @@ namespace Portkey.Contracts.BingoGameContract
             var result = await BingoGameContractStub.GetRandomNumber.SendWithExceptionAsync(new Hash());
             result.TransactionResult.Error.ShouldContain("Invalid input");
         }
+
+        // [Fact]
+        // public async Task Test()
+        // {
+        //     var result = await BingoGameContractStub.GetRandomHash.CallAsync(new GetRandomHashInput
+        //     {
+        //         Seed = HashHelper.ComputeFrom("0"),
+        //         Times = 10
+        //     });
+        //     result.RandomResults.Count.ShouldBe(10);
+        // }
     }
 }
