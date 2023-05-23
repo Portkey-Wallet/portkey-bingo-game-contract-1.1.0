@@ -99,6 +99,7 @@ message BoutInformation {
     int64 round_number = 9;
     google.protobuf.Timestamp play_time = 10;
     DiceList dices = 11;
+    aelf.Address player_address = 12;
 }
 
 message LimitSettings {

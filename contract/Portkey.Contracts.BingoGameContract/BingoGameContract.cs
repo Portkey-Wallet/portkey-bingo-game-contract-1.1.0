@@ -84,6 +84,7 @@ namespace Portkey.Contracts.BingoGameContract
                 RoundNumber = roundNumber.Value,
                 PlayTime = Context.CurrentBlockTime,
                 Dices = new DiceList(),
+                PlayerAddress = Context.Sender
             };
             State.BoutInformations[Context.OriginTransactionId] = boutInformation;
 
@@ -133,6 +134,9 @@ namespace Portkey.Contracts.BingoGameContract
             Assert(boutInformation != null, "Bout not found.");
 
             Assert(!boutInformation!.IsComplete, "Bout already finished.");
+
+            Assert(boutInformation.PlayerAddress == Context.Sender, "Only the player can get the result.");
+
             var targetHeight = boutInformation.PlayBlockHeight.Add(BingoGameContractConstants.BingoBlockHeight);
             Assert(targetHeight <= Context.CurrentHeight, "Invalid target height.");
 
@@ -168,7 +172,7 @@ namespace Portkey.Contracts.BingoGameContract
                 {
                     Symbol = BingoGameContractConstants.CardSymbol,
                     Amount = transferAmount,
-                    To = Context.Sender,
+                    To = boutInformation.PlayerAddress,
                     Memo = "Thx for playing my game."
                 });
             }
@@ -181,7 +185,7 @@ namespace Portkey.Contracts.BingoGameContract
             boutInformation.Dices.Dices.Add(dices[1]);
             boutInformation.Dices.Dices.Add(dices[2]);
 
-            State.PlayerInformation[Context.Sender] = playerInformation;
+            State.PlayerInformation[boutInformation.PlayerAddress] = playerInformation;
             State.BoutInformations[input] = boutInformation;
 
             Context.Fire(new Bingoed
@@ -195,7 +199,7 @@ namespace Portkey.Contracts.BingoGameContract
                 RandomNumber = boutInformation.RandomNumber,
                 Dices = boutInformation.Dices,
                 Type = boutInformation.Type,
-                PlayerAddress = Context.Sender,
+                PlayerAddress = boutInformation.PlayerAddress,
             });
 
             return new BoolValue { Value = isWin };
