@@ -113,7 +113,7 @@ message Played {
     int64 amount = 2 [(aelf.is_indexed) = true];
     BingoType type = 3 [(aelf.is_indexed) = true];
     aelf.Hash play_id = 4 [(aelf.is_indexed) = true];
-    string aelf_address = 5 [(aelf.is_indexed) = true];
+    aelf.Address player_address = 5 [(aelf.is_indexed) = true];
     string symbol = 6 [(aelf.is_indexed) = true];
 }
 
@@ -128,12 +128,12 @@ message Bingoed {
     BingoType type = 7 [(aelf.is_indexed) = true];
     int32 random_number = 8 [(aelf.is_indexed) = true];
     DiceList dices = 9 [(aelf.is_indexed) = true];
-    string aelf_address = 10 [(aelf.is_indexed) = true];
+    aelf.Address player_address = 10 [(aelf.is_indexed) = true];
 }
 
 message Registered {
     option (aelf.is_event) = true;
     aelf.Hash seed = 1 [(aelf.is_indexed) = true];
     google.protobuf.Timestamp register_time =2 [(aelf.is_indexed) = true];
-    string aelf_address = 3 [(aelf.is_indexed) = true];
+    aelf.Address player_address = 3 [(aelf.is_indexed) = true];
 }
