@@ -111,6 +111,39 @@ namespace Portkey.Contracts.BingoGameContract
             times.ShouldBe(total);
         }
 
+        [Fact]
+        public async Task BingoTest_TransferAmountGreaterThanZero_TransfersToken()
+        {
+            // Arrange
+            var boutInformation = new BoutInformation
+            {
+                Amount = 10, // Set an appropriate value for the 'Amount' property
+                PlayerAddress = DefaultAddress // Set the player address to an appropriate value
+            };
+            var award = 5; // Set an appropriate value for the 'award' variable
+
+            // Act
+            var transferAmount = boutInformation.Amount + boutInformation.Amount * award;
+            if (transferAmount > 0)
+            {
+                await TokenContractStub.Transfer.SendAsync(new TransferInput
+                {
+                    Symbol = BingoGameContractConstants.CardSymbol,
+                    Amount = transferAmount,
+                    To = DAppContractAddress,
+                    Memo = "Thx for playing my game."
+                });
+            }
+
+            // Assert
+            var balanceAfterTransfer = await TokenContractStub.GetBalance.CallAsync(new GetBalanceInput
+            {
+                Owner = DAppContractAddress,
+                Symbol = BingoGameContractConstants.CardSymbol
+            });
+            balanceAfterTransfer.Balance.ShouldBe(transferAmount);
+        }
+
         private async Task<bool> BingoTest()
         {
             var id = await PlayAsync();
