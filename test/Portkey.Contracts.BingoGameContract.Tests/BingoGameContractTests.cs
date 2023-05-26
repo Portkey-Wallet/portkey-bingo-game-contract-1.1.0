@@ -268,7 +268,6 @@ namespace Portkey.Contracts.BingoGameContract
             await BingoGameContractStub.GetPlayerInformation.CallAsync(DefaultAddress);
             var result = await BingoGameContractStub.GetBoutInformation.CallAsync(new GetBoutInformationInput
             {
-                Address = DefaultAddress,
                 PlayId = playId
             });
             result.IsComplete.ShouldBeFalse();
@@ -291,7 +290,6 @@ namespace Portkey.Contracts.BingoGameContract
             result = await BingoGameContractStub.GetBoutInformation.SendWithExceptionAsync(new GetBoutInformationInput
             {
                 PlayId = Hash.Empty,
-                Address = UserAddress
             });
             result.TransactionResult.Error.ShouldContain("Bout not found.");
 
@@ -299,7 +297,6 @@ namespace Portkey.Contracts.BingoGameContract
             result = await BingoGameContractStub.GetBoutInformation.SendWithExceptionAsync(new GetBoutInformationInput
             {
                 PlayId = Hash.Empty,
-                Address = DefaultAddress
             });
             result.TransactionResult.Error.ShouldContain("Bout not found.");
         }
@@ -326,16 +323,5 @@ namespace Portkey.Contracts.BingoGameContract
             var result = await BingoGameContractStub.GetRandomNumber.SendWithExceptionAsync(new Hash());
             result.TransactionResult.Error.ShouldContain("Invalid input");
         }
-
-        // [Fact]
-        // public async Task Test()
-        // {
-        //     var result = await BingoGameContractStub.GetRandomHash.CallAsync(new GetRandomHashInput
-        //     {
-        //         Seed = HashHelper.ComputeFrom("0"),
-        //         Times = 10
-        //     });
-        //     result.RandomResults.Count.ShouldBe(10);
-        // }
     }
 }

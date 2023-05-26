@@ -360,81 +360,81 @@ namespace Portkey.Contracts.BingoGameContract
             return boutInformation;
         }
 
-        public override GetRandomHashOutput GetRandomHash(GetRandomHashInput input)
-        {
-            if (State.ConsensusContract.Value == null)
-            {
-                State.ConsensusContract.Value =
-                    Context.GetContractAddressByName(SmartContractConstants.ConsensusContractSystemName);
-            }
+        // public override GetRandomHashOutput GetRandomHash(GetRandomHashInput input)
+        // {
+        //     if (State.ConsensusContract.Value == null)
+        //     {
+        //         State.ConsensusContract.Value =
+        //             Context.GetContractAddressByName(SmartContractConstants.ConsensusContractSystemName);
+        //     }
 
-            var result = new List<RandomResult>();
+        //     var result = new List<RandomResult>();
 
-            var output = State.ConsensusContract.GetCurrentRoundNumber.Call(new Empty());
-            var roundNumber = output.Value;
-            var currentHeight = Context.CurrentHeight;
+        //     var output = State.ConsensusContract.GetCurrentRoundNumber.Call(new Empty());
+        //     var roundNumber = output.Value;
+        //     var currentHeight = Context.CurrentHeight;
 
-            while (roundNumber > 0 && result.Count < input.Times)
-            {
-                var round = State.ConsensusContract.GetRoundInformation.Call(new Int64Value
-                {
-                    Value = roundNumber
-                });
+        //     while (roundNumber > 0 && result.Count < input.Times)
+        //     {
+        //         var round = State.ConsensusContract.GetRoundInformation.Call(new Int64Value
+        //         {
+        //             Value = roundNumber
+        //         });
 
-                var miners = round.RealTimeMinersInformation.Values.Where(m => m.ActualMiningTimes.Count > 0)
-                    .OrderBy(m => m.Order).ToList();
+        //         var miners = round.RealTimeMinersInformation.Values.Where(m => m.ActualMiningTimes.Count > 0)
+        //             .OrderBy(m => m.Order).ToList();
 
-                var miner = miners.LastOrDefault();
+        //         var miner = miners.LastOrDefault();
 
-                while (miner != null)
-                {
-                    var outValue = miner.OutValue;
-                    if (outValue == null || outValue.Value.IsNullOrEmpty())
-                    {
-                        if (miners.Count < 2)
-                        {
-                            break;
-                        }
+        //         while (miner != null)
+        //         {
+        //             var outValue = miner.OutValue;
+        //             if (outValue == null || outValue.Value.IsNullOrEmpty())
+        //             {
+        //                 if (miners.Count < 2)
+        //                 {
+        //                     break;
+        //                 }
 
-                        outValue = miners[^2].OutValue;
-                    }
+        //                 outValue = miners[^2].OutValue;
+        //             }
 
-                    for (int i = miner.ActualMiningTimes.Count - 1; i >= 0; i--)
-                    {
-                        var hash = State.ConsensusContract.GetRandomHash.Call(new Int64Value
-                        {
-                            Value = currentHeight
-                        });
-                        hash = HashHelper.XorAndCompute(hash, outValue);
-                        hash = HashHelper.ConcatAndCompute(hash, input.Seed);
+        //             for (int i = miner.ActualMiningTimes.Count - 1; i >= 0; i--)
+        //             {
+        //                 var hash = State.ConsensusContract.GetRandomHash.Call(new Int64Value
+        //                 {
+        //                     Value = currentHeight
+        //                 });
+        //                 hash = HashHelper.XorAndCompute(hash, outValue);
+        //                 hash = HashHelper.ConcatAndCompute(hash, input.Seed);
 
-                        result.Add(new RandomResult
-                        {
-                            RandomHash = hash,
-                            Height = currentHeight
-                        });
-                        if (result.Count >= input.Times)
-                        {
-                            break;
-                        }
+        //                 result.Add(new RandomResult
+        //                 {
+        //                     RandomHash = hash,
+        //                     Height = currentHeight
+        //                 });
+        //                 if (result.Count >= input.Times)
+        //                 {
+        //                     break;
+        //                 }
 
-                        currentHeight--;
-                    }
+        //                 currentHeight--;
+        //             }
 
-                    miners.Remove(miner);
-                    miner = miners.FirstOrDefault();
-                }
+        //             miners.Remove(miner);
+        //             miner = miners.FirstOrDefault();
+        //         }
 
-                roundNumber--;
-            }
+        //         roundNumber--;
+        //     }
 
-            result.Reverse();
+        //     result.Reverse();
 
-            return new GetRandomHashOutput
-            {
-                RandomResults = { result }
-            };
-        }
+        //     return new GetRandomHashOutput
+        //     {
+        //         RandomResults = { result }
+        //     };
+        // }
     }
     
 }

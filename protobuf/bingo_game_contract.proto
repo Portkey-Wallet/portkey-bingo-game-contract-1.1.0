@@ -74,7 +74,6 @@ message PlayInput {
 
 message GetBoutInformationInput {
     aelf.Hash play_id = 1;
-    aelf.Address address = 2;
 }
 
 message PlayerInformation {
