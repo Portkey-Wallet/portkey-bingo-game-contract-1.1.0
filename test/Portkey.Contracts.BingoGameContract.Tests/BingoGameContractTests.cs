@@ -50,7 +50,7 @@ namespace Portkey.Contracts.BingoGameContract
             var tx = await BingoGameContractStub.Play.SendAsync(new PlayInput
             {
                 Amount = amount,
-                Type = BingoType.Large
+                Type = BingoType.Small
             });
             var information = await BingoGameContractStub.GetPlayerInformation.CallAsync(DefaultAddress);
 
