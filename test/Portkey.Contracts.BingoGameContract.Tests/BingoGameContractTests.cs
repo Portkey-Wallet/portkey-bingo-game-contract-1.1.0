@@ -66,7 +66,7 @@ namespace Portkey.Contracts.BingoGameContract
             var height = await BingoGameContractStub.Play.SendAsync(new PlayInput
             {
                 Amount = amount,
-                Type = BingoType.Large
+                Type = BingoType.Small
             });
 
             return height.TransactionResult.TransactionId;
