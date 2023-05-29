@@ -173,7 +173,7 @@ namespace Portkey.Contracts.BingoGameContract
                 balance2.Balance.ShouldBe(balance.Balance + bout.Award + bout.Amount);
 
                 var num = await BingoGameContractStub.GetRandomNumber.CallAsync(id);
-                num.Value.ShouldBeGreaterThan(10);
+                num.Value.ShouldBeLessThan(11);
             }
             else
             {
@@ -181,7 +181,7 @@ namespace Portkey.Contracts.BingoGameContract
                 balance2.Balance.ShouldBe(balance.Balance);
 
                 var num = await BingoGameContractStub.GetRandomNumber.CallAsync(id);
-                num.Value.ShouldBeLessThan(11);
+                num.Value.ShouldBeGreaterThan(10);
             }
 
             var award = await BingoGameContractStub.GetAward.CallAsync(bout.PlayId);
