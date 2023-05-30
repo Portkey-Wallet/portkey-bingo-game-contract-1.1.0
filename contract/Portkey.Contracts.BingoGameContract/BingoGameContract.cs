@@ -32,6 +32,33 @@ namespace Portkey.Contracts.BingoGameContract
             return new Empty();
         }
 
+        public override Empty ChangeAdmin(Address input)
+        {
+            Assert(State.Admin.Value == Context.Sender, "No permission");
+            Assert(input != null, "Invalid input");
+
+            if (State.Admin.Value == input)
+            {
+                return new Empty();
+            }
+
+            State.Admin.Value = input;
+
+            Context.Fire(new AdminChanged
+            {
+                OldAddress = Context.Sender,
+                NewAddress = input
+            });
+
+
+            return new Empty();
+        }
+
+        public override Address GetAdmin(Empty input)
+        {
+            return State.Admin.Value;
+        }
+
         public override Empty Initialize(Empty input)
         {
             if (State.Initialized.Value)
@@ -43,6 +70,8 @@ namespace Portkey.Contracts.BingoGameContract
                 Context.GetContractAddressByName(SmartContractConstants.TokenContractSystemName);
             State.ConsensusContract.Value =
                 Context.GetContractAddressByName(SmartContractConstants.ConsensusContractSystemName);
+            Assert(State.Admin.Value == null, "Already initialized.");
+            Assert(State.Admin.Value == Context.Sender, "Only admin can initialize the contract.");
             State.Admin.Value = Context.Sender;
             State.MinimumBet.Value = BingoGameContractConstants.DefaultMinimumBet;
             State.MaximumBet.Value = BingoGameContractConstants.DefaultMaximumBet;

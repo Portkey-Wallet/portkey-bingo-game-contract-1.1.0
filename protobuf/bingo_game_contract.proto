@@ -26,6 +26,8 @@ service BingoGameContract {
     }
     rpc Initialize (google.protobuf.Empty) returns (google.protobuf.Empty) {
     }
+    rpc ChangeAdmin (aelf.Address) returns (google.protobuf.Empty) {
+    }
 
     // Views
     rpc GetAward (aelf.Hash) returns (google.protobuf.Int64Value) {
@@ -44,6 +46,9 @@ service BingoGameContract {
         option (aelf.is_view) = true;
     }
     rpc GetRandomHash (GetRandomHashInput) returns (GetRandomHashOutput) {
+        option (aelf.is_view) = true;
+    }
+    rpc GetAdmin (google.protobuf.Empty) returns (aelf.Address) {
         option (aelf.is_view) = true;
     }
 }
@@ -136,4 +141,10 @@ message Registered {
     aelf.Hash seed = 1 [(aelf.is_indexed) = true];
     google.protobuf.Timestamp register_time =2 [(aelf.is_indexed) = true];
     aelf.Address player_address = 3 [(aelf.is_indexed) = true];
+}
+
+message AdminChanged {
+    option (aelf.is_event) = true;
+    aelf.Address old_address = 1 [(aelf.is_indexed) = true];
+    aelf.Address new_address = 2 [(aelf.is_indexed) = true];
 }
