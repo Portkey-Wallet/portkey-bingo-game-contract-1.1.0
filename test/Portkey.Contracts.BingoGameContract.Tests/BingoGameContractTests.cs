@@ -346,5 +346,26 @@ namespace Portkey.Contracts.BingoGameContract
             var result = await BingoGameContractStub.GetRandomNumber.SendWithExceptionAsync(new Hash());
             result.TransactionResult.Error.ShouldContain("Invalid input");
         }
+        [Fact]
+        public async void ChangeAdmin_WithValidInput_ShouldUpdateAdmin()
+        {
+            // Arrange
+            await InitializeTests();
+            var contract = new BingoGameContract();
+            var adminAddress = DefaultAddress;
+            var newAdminAddress = new Address { Value = HashHelper.ComputeFrom("NewAdmin").Value };
+            var result = await BingoGameContractStub.ChangeAdmin.SendAsync(newAdminAddress);
+            var getAdminAddress = await BingoGameContractStub.GetAdmin.CallAsync(new Empty());
+
+            // Assert
+            Assert.Equal(newAdminAddress, getAdminAddress);
+            // Add additional assertions to ensure the event was fired and the values are correct
+        }
+        [Fact]
+        public async void GetAdmin_ShouldReturnAdminAddress(){
+            await InitializeTests();
+            var getAdminAddress = await BingoGameContractStub.GetAdmin.CallAsync(new Empty());
+            Assert.Equal(DefaultAddress, getAdminAddress);
+        }
     }
 }
