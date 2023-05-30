@@ -71,7 +71,6 @@ namespace Portkey.Contracts.BingoGameContract
             State.ConsensusContract.Value =
                 Context.GetContractAddressByName(SmartContractConstants.ConsensusContractSystemName);
             Assert(State.Admin.Value == null, "Already initialized.");
-            Assert(State.Admin.Value == Context.Sender, "Only admin can initialize the contract.");
             State.Admin.Value = Context.Sender;
             State.MinimumBet.Value = BingoGameContractConstants.DefaultMinimumBet;
             State.MaximumBet.Value = BingoGameContractConstants.DefaultMaximumBet;
