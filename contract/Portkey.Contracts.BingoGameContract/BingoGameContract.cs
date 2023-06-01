@@ -189,8 +189,8 @@ namespace Portkey.Contracts.BingoGameContract
             // var bitArraySum = SumHash(usefulHash);
             var dices = GetDices(usefulHash);
             var diceNumSum = dices.Sum();
-            var bitArraySumResult = GetDiceNumSumResult(diceNumSum);
-            var isWin = GetResult(bitArraySumResult, boutInformation.Type);
+            var diceNumSumResult = GetDiceNumSumResult(diceNumSum);
+            var isWin = GetResult(diceNumSumResult, boutInformation.Type);
             var award = isWin ? boutInformation.Amount : -boutInformation.Amount;
             var transferAmount = boutInformation.Amount.Add(award);
             if (transferAmount > 0)
