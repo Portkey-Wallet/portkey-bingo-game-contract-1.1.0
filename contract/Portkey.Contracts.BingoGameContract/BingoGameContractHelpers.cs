@@ -15,7 +15,7 @@ namespace Portkey.Contracts.BingoGameContract
             return playerInformation;
         }
 
-        private BingoType GetBitArraySumResult(int bitArraySum)
+        private BingoType GetDiceNumSumResult(int bitArraySum)
         {
             Assert(bitArraySum is >= 3 and <= 18, $"random number: {bitArraySum} error");
             if (bitArraySum < 11)

@@ -136,8 +136,7 @@ namespace Portkey.Contracts.BingoGameContract
             for (int i = 0; i < 3; i++)
             {
                 var startIndex = i * 8;
-                var subString = hexString.Substring(startIndex, 8);
-                var intValue = int.Parse(subString, System.Globalization.NumberStyles.HexNumber);
+                var intValue = int.Parse(hexString.Substring(startIndex, 8), System.Globalization.NumberStyles.HexNumber);
                 var dice = (intValue % 6 + 5) % 6 + 1;
                 dices.Add(dice);
             }
@@ -188,9 +187,9 @@ namespace Portkey.Contracts.BingoGameContract
 
             var usefulHash = HashHelper.ConcatAndCompute(randomHash, playerInformation.Seed);
             // var bitArraySum = SumHash(usefulHash);
-            List<int> dices = GetDices(usefulHash);
-            var bitArraySum = dices.Sum();
-            var bitArraySumResult = GetBitArraySumResult(bitArraySum);
+            var dices = GetDices(usefulHash);
+            var diceNumSum = dices.Sum();
+            var bitArraySumResult = GetDiceNumSumResult(diceNumSum);
             var isWin = GetResult(bitArraySumResult, boutInformation.Type);
             var award = isWin ? boutInformation.Amount : -boutInformation.Amount;
             var transferAmount = boutInformation.Amount.Add(award);
@@ -207,7 +206,7 @@ namespace Portkey.Contracts.BingoGameContract
 
             boutInformation.Award = award;
             boutInformation.IsComplete = true;
-            boutInformation.RandomNumber = bitArraySum;
+            boutInformation.RandomNumber = diceNumSum;
             boutInformation.BingoBlockHeight = Context.CurrentHeight;
             boutInformation.Dices.Dices.Add(dices[0]);
             boutInformation.Dices.Dices.Add(dices[1]);
