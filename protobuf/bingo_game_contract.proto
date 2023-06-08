@@ -26,6 +26,8 @@ service BingoGameContract {
     }
     rpc Initialize (google.protobuf.Empty) returns (google.protobuf.Empty) {
     }
+    rpc ChangeAdmin (aelf.Address) returns (google.protobuf.Empty) {
+    }
 
     // Views
     rpc GetAward (aelf.Hash) returns (google.protobuf.Int64Value) {
@@ -43,6 +45,26 @@ service BingoGameContract {
     rpc GetBoutInformation (GetBoutInformationInput) returns (BoutInformation) {
         option (aelf.is_view) = true;
     }
+    rpc GetRandomHash (GetRandomHashInput) returns (GetRandomHashOutput) {
+        option (aelf.is_view) = true;
+    }
+    rpc GetAdmin (google.protobuf.Empty) returns (aelf.Address) {
+        option (aelf.is_view) = true;
+    }
+}
+
+message GetRandomHashInput {
+    aelf.Hash seed = 1;
+    int64 times = 2;
+}
+
+message GetRandomHashOutput {
+    repeated RandomResult random_results = 1;
+}
+
+message RandomResult {
+    aelf.Hash random_hash = 1;
+    int64 height = 2;
 }
 
 enum BingoType {
@@ -57,13 +79,16 @@ message PlayInput {
 
 message GetBoutInformationInput {
     aelf.Hash play_id = 1;
-    aelf.Address address = 2;
 }
 
 message PlayerInformation {
     aelf.Hash seed = 1;
     repeated BoutInformation bouts = 2;
     google.protobuf.Timestamp register_time = 3;
+}
+
+message DiceList{
+    repeated int32 dices = 1;
 }
 
 message BoutInformation {
@@ -77,6 +102,8 @@ message BoutInformation {
     int32 random_number = 8;
     int64 round_number = 9;
     google.protobuf.Timestamp play_time = 10;
+    DiceList dices = 11;
+    aelf.Address player_address = 12;
 }
 
 message LimitSettings {
@@ -91,6 +118,8 @@ message Played {
     int64 amount = 2 [(aelf.is_indexed) = true];
     BingoType type = 3 [(aelf.is_indexed) = true];
     aelf.Hash play_id = 4 [(aelf.is_indexed) = true];
+    aelf.Address player_address = 5 [(aelf.is_indexed) = true];
+    string symbol = 6 [(aelf.is_indexed) = true];
 }
 
 message Bingoed {
@@ -103,4 +132,19 @@ message Bingoed {
     int64 bingo_block_height = 6 [(aelf.is_indexed) = true];
     BingoType type = 7 [(aelf.is_indexed) = true];
     int32 random_number = 8 [(aelf.is_indexed) = true];
+    DiceList dices = 9 [(aelf.is_indexed) = true];
+    aelf.Address player_address = 10 [(aelf.is_indexed) = true];
+}
+
+message Registered {
+    option (aelf.is_event) = true;
+    aelf.Hash seed = 1 [(aelf.is_indexed) = true];
+    google.protobuf.Timestamp register_time =2 [(aelf.is_indexed) = true];
+    aelf.Address player_address = 3 [(aelf.is_indexed) = true];
+}
+
+message AdminChanged {
+    option (aelf.is_event) = true;
+    aelf.Address old_address = 1 [(aelf.is_indexed) = true];
+    aelf.Address new_address = 2 [(aelf.is_indexed) = true];
 }

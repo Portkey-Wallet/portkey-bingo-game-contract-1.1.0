@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using AElf;
 using AElf.Contracts.MultiToken;
@@ -21,8 +22,41 @@ namespace Portkey.Contracts.BingoGameContract
                 RegisterTime = Context.CurrentBlockTime
             };
             State.PlayerInformation[Context.Sender] = information;
+            Context.Fire(new Registered
+            {
+                RegisterTime = information.RegisterTime,
+                PlayerAddress = Context.Sender,
+                Seed = information.Seed
+            });
 
             return new Empty();
+        }
+
+        public override Empty ChangeAdmin(Address input)
+        {
+            Assert(State.Admin.Value == Context.Sender, "No permission");
+            Assert(input != null, "Invalid input");
+
+            if (State.Admin.Value == input)
+            {
+                return new Empty();
+            }
+
+            State.Admin.Value = input;
+
+            Context.Fire(new AdminChanged
+            {
+                OldAddress = Context.Sender,
+                NewAddress = input
+            });
+
+
+            return new Empty();
+        }
+
+        public override Address GetAdmin(Empty input)
+        {
+            return State.Admin.Value;
         }
 
         public override Empty Initialize(Empty input)
@@ -36,6 +70,7 @@ namespace Portkey.Contracts.BingoGameContract
                 Context.GetContractAddressByName(SmartContractConstants.TokenContractSystemName);
             State.ConsensusContract.Value =
                 Context.GetContractAddressByName(SmartContractConstants.ConsensusContractSystemName);
+            Assert(State.Admin.Value == null, "Already initialized.");
             State.Admin.Value = Context.Sender;
             State.MinimumBet.Value = BingoGameContractConstants.DefaultMinimumBet;
             State.MaximumBet.Value = BingoGameContractConstants.DefaultMaximumBet;
@@ -44,19 +79,10 @@ namespace Portkey.Contracts.BingoGameContract
             return new Empty();
         }
 
-        private void LimitBetAmount(PlayerInformation information)
-        {
-            while (information.Bouts.Count >= BingoGameContractConstants.MaximumBetTimes)
-            {
-                information.Bouts.RemoveAt(0);
-            }
-        }
-
         public override Int64Value Play(PlayInput input)
         {
             Assert(input.Amount >= State.MinimumBet.Value && input.Amount <= State.MaximumBet.Value,
                 "Invalid bet amount.");
-            var playerInformation = GetPlayerInformation();
 
             Context.LogDebug(() => $"Playing with amount {input.Amount}");
 
@@ -75,8 +101,6 @@ namespace Portkey.Contracts.BingoGameContract
                 Memo = "Enjoy!"
             });
 
-            LimitBetAmount(playerInformation);
-
             var roundNumber = State.ConsensusContract.GetCurrentRoundNumber.Call(new Empty());
 
             var boutInformation = new BoutInformation
@@ -86,40 +110,60 @@ namespace Portkey.Contracts.BingoGameContract
                 Type = input.Type,
                 PlayId = Context.OriginTransactionId,
                 RoundNumber = roundNumber.Value,
-                PlayTime = Context.CurrentBlockTime
+                PlayTime = Context.CurrentBlockTime,
+                Dices = new DiceList(),
+                PlayerAddress = Context.Sender
             };
-
-            playerInformation.Bouts.Add(boutInformation);
-
-            State.PlayerInformation[Context.Sender] = playerInformation;
+            State.BoutInformations[Context.OriginTransactionId] = boutInformation;
 
             Context.Fire(new Played
             {
                 PlayBlockHeight = boutInformation.PlayBlockHeight,
                 PlayId = boutInformation.PlayId,
                 Amount = boutInformation.Amount,
-                Type = boutInformation.Type
+                Type = boutInformation.Type,
+                PlayerAddress = Context.Sender,
+                Symbol = BingoGameContractConstants.CardSymbol
             });
 
             return new Int64Value { Value = Context.CurrentHeight.Add(BingoGameContractConstants.BingoBlockHeight) };
+        }    
+        private List<int> GetDices(Hash hashValue)
+        {
+            var hexString = hashValue.ToHex();
+            var dices = new List<int>();
+
+            for (int i = 0; i < 3; i++)
+            {
+                var startIndex = i * 8;
+                var intValue = int.Parse(hexString.Substring(startIndex, 8), System.Globalization.NumberStyles.HexNumber);
+                var dice = (intValue % 6 + 5) % 6 + 1;
+                dices.Add(dice);
+            }
+
+            return dices;
         }
 
+        
+        
         public override BoolValue Bingo(Hash input)
         {
             Context.LogDebug(() => $"Getting game result of play id: {input.ToHex()}");
 
+            Assert(input != null && !input.Value.IsNullOrEmpty(), "Invalid input.");
+
             var playerInformation = State.PlayerInformation[Context.Sender];
 
             Assert(playerInformation != null, $"User {Context.Sender} not registered before.");
-            Assert(playerInformation!.Bouts.Count > 0, $"User {Context.Sender} seems never join this game.");
 
-            var boutInformation = input == Hash.Empty
-                ? playerInformation.Bouts.First(i => i.BingoBlockHeight == 0)
-                : playerInformation.Bouts.FirstOrDefault(i => i.PlayId == input);
+            var boutInformation = State.BoutInformations[input];
 
             Assert(boutInformation != null, "Bout not found.");
 
             Assert(!boutInformation!.IsComplete, "Bout already finished.");
+
+            Assert(boutInformation.PlayerAddress == Context.Sender, "Only the player can get the result.");
+
             var targetHeight = boutInformation.PlayBlockHeight.Add(BingoGameContractConstants.BingoBlockHeight);
             Assert(targetHeight <= Context.CurrentHeight, "Invalid target height.");
 
@@ -143,9 +187,10 @@ namespace Portkey.Contracts.BingoGameContract
 
             var usefulHash = HashHelper.ConcatAndCompute(randomHash, playerInformation.Seed);
             // var bitArraySum = SumHash(usefulHash);
-            var bitArraySum = (int)Context.ConvertHashToInt64(usefulHash, 0, 256);
-            var bitArraySumResult = GetBitArraySumResult(bitArraySum);
-            var isWin = GetResult(bitArraySumResult, boutInformation.Type);
+            var dices = GetDices(usefulHash);
+            var diceNumSum = dices.Sum();
+            var diceNumSumResult = GetDiceNumSumResult(diceNumSum);
+            var isWin = GetResult(diceNumSumResult, boutInformation.Type);
             var award = isWin ? boutInformation.Amount : -boutInformation.Amount;
             var transferAmount = boutInformation.Amount.Add(award);
             if (transferAmount > 0)
@@ -154,17 +199,21 @@ namespace Portkey.Contracts.BingoGameContract
                 {
                     Symbol = BingoGameContractConstants.CardSymbol,
                     Amount = transferAmount,
-                    To = Context.Sender,
+                    To = boutInformation.PlayerAddress,
                     Memo = "Thx for playing my game."
                 });
             }
 
             boutInformation.Award = award;
             boutInformation.IsComplete = true;
-            boutInformation.RandomNumber = bitArraySum;
+            boutInformation.RandomNumber = diceNumSum;
             boutInformation.BingoBlockHeight = Context.CurrentHeight;
+            boutInformation.Dices.Dices.Add(dices[0]);
+            boutInformation.Dices.Dices.Add(dices[1]);
+            boutInformation.Dices.Dices.Add(dices[2]);
 
-            State.PlayerInformation[Context.Sender] = playerInformation;
+            State.PlayerInformation[boutInformation.PlayerAddress] = playerInformation;
+            State.BoutInformations[input] = boutInformation;
 
             Context.Fire(new Bingoed
             {
@@ -175,7 +224,9 @@ namespace Portkey.Contracts.BingoGameContract
                 BingoBlockHeight = boutInformation.BingoBlockHeight,
                 IsComplete = boutInformation.IsComplete,
                 RandomNumber = boutInformation.RandomNumber,
-                Type = boutInformation.Type
+                Dices = boutInformation.Dices,
+                Type = boutInformation.Type,
+                PlayerAddress = boutInformation.PlayerAddress,
             });
 
             return new BoolValue { Value = isWin };
@@ -237,7 +288,7 @@ namespace Portkey.Contracts.BingoGameContract
                         if (miners.Last().Equals(miner))
                         {
                             miners.Remove(miner);
-                           
+
                             value = miners.LastOrDefault()?.OutValue;
                         }
                     }
@@ -274,7 +325,8 @@ namespace Portkey.Contracts.BingoGameContract
 
         public override Int64Value GetAward(Hash input)
         {
-            var boutInformation = GetPlayerInformation().Bouts.FirstOrDefault(i => i.PlayId == input);
+            Assert(input != null && !input.Value.IsNullOrEmpty(), "Invalid input.");
+            var boutInformation = State.BoutInformations[input];
             return boutInformation == null
                 ? new Int64Value { Value = 0 }
                 : new Int64Value { Value = boutInformation.Award };
@@ -312,12 +364,11 @@ namespace Portkey.Contracts.BingoGameContract
         }
 
         public override Int32Value GetRandomNumber(Hash input)
-        {
+        {   
+            Assert(input != null && !input.Value.IsNullOrEmpty(), "Invalid input.");
             var playerInformation = GetPlayerInformation();
 
-            Assert(input != null && !input.Value.IsNullOrEmpty(), "Invalid input");
-
-            var boutInformation = playerInformation.Bouts.FirstOrDefault(i => i.PlayId == input);
+            var boutInformation = State.BoutInformations[input];
 
             Assert(boutInformation != null, "Bout not found.");
 
@@ -328,16 +379,13 @@ namespace Portkey.Contracts.BingoGameContract
         {
             Assert(input != null, "Invalid input");
             Assert(input!.PlayId != null && !input.PlayId.Value.IsNullOrEmpty(), "Invalid playId");
-            Assert(input.Address != null && !input.Address.Value.IsNullOrEmpty(), "Invalid address");
 
-            var playerInformation = State.PlayerInformation[input.Address];
-            Assert(playerInformation != null, "Player not registered before.");
-
-            var boutInformation = playerInformation!.Bouts.FirstOrDefault(i => i.PlayId == input.PlayId);
+            var boutInformation = State.BoutInformations[input.PlayId];
 
             Assert(boutInformation != null, "Bout not found.");
 
             return boutInformation;
         }
     }
+    
 }
