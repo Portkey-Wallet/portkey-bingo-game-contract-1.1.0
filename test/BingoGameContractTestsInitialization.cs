@@ -1,7 +1,6 @@
 using AElf.Contracts.Consensus.AEDPoS;
 using AElf.Contracts.MultiToken;
 using AElf.Cryptography.ECDSA;
-using AElf.Kernel.Token;
 using AElf.Types;
 
 namespace Portkey.Contracts.BingoGameContract
