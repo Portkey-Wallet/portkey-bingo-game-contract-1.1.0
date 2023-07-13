@@ -8,6 +8,6 @@ namespace Portkey.Contracts.BingoGameContract
         public const long DefaultMaximumBet = 100_00000000;
         public const long MaximumBetTimes = 50;
         
-        public const long BingoBlockHeight = 16;
+        public const long BingoBlockHeight = 8;
     }
 }
